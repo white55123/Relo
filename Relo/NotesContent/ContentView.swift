@@ -31,6 +31,7 @@ struct Note: Identifiable {
 
 @MainActor
 class NotesViewModel: ObservableObject {
+    private let nlpAnalyzer = NLPAnalyzer()
     private let context: NSManagedObjectContext
     
     @Published var currentText: String = ""
@@ -50,12 +51,33 @@ class NotesViewModel: ObservableObject {
         currentText = ""
     }
     
-    /// 非 AI 的占位实现：先用简单规则，从简入深
+    //MARK: - 代办操作
+    ///切换待办的完成状态
+    func toggleTodo(noteId: UUID, todoId: UUID) {
+        guard let noteIndex = notes.firstIndex(where: { $0.id == noteId}),
+              let todoIndex = notes[noteIndex].todos.firstIndex(where: { $0.id == todoId}) else {
+            return
+        }
+        
+        notes[noteIndex].todos[todoIndex].isDone.toggle()
+    }
+    
+    //分析笔记内容
     private func analyze(_ note: inout Note) {
-        note.keywords = extractKeywords(from: note.text)
-        note.summary = makeSummary(from: note.text)
-        note.sentiment = detectSentiment(from: note.text)
-        note.todos = extractTodos(from: note.text)
+        //使用nlp分析
+        let result = nlpAnalyzer.analyze(text: note.text)
+        
+        if result.keywords.isEmpty {
+            note.keywords = extractKeywords(from: note.text)
+            note.summary = makeSummary(from: note.text)
+            note.sentiment = detectSentiment(from: note.text)
+            note.todos = extractTodos(from: note.text)
+        } else {
+            note.keywords = result.keywords
+            note.summary = result.summary
+            note.sentiment = result.sentiment
+            note.todos = result.todos
+        }
     }
     
     private func extractKeywords(from text: String) -> [String] {
@@ -191,63 +213,73 @@ struct ContentView: View {
 
 // MARK: - 笔记编辑页
 
+// MARK: - 笔记编辑页
+
 struct NoteEditorPage: View {
     @ObservedObject var vm: NotesViewModel
+    @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
-        VStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("快速记一条笔记")
-                    .font(.title2.weight(.semibold))
-                
-                TextEditor(text: $vm.currentText)
-                    .frame(minHeight: 180)
-                    .padding(10)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(14)
-                
-                HStack {
-                    Spacer()
-                    Button {
-                        vm.addAndAnalyzeNote()
-                    } label: {
-                        Label("保存并智能分析", systemImage: "sparkles")
-                            .padding(.horizontal, 12)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(vm.currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-            .padding()
-            
-            Spacer()
-            
-            if let last = vm.notes.first {
-                // 最近一条笔记的摘要预览
+        ScrollView {
+            VStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("最近的一条笔记")
-                        .font(.headline)
-                    Text(last.summary.isEmpty ? last.text : last.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                    Text("快速记一条笔记")
+                        .font(.title2.weight(.semibold))
+                    
+                    TextEditor(text: $vm.currentText)
+                        .frame(minHeight: 180)
+                        .padding(10)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(14)
+                        .focused($isTextEditorFocused)
                     
                     HStack {
-                        Label(last.sentiment.rawValue, systemImage: "face.smiling")
-                            .font(.caption)
-                            .foregroundStyle(colorFor(sentiment: last.sentiment))
                         Spacer()
-                        Text(last.createdAt, style: .date)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                        Button {
+                            isTextEditorFocused = false
+                            vm.addAndAnalyzeNote()
+                        } label: {
+                            Label("保存并智能分析", systemImage: "sparkles")
+                                .padding(.horizontal, 12)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(vm.currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
                 .padding()
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(14)
-                .padding(.horizontal)
-                .padding(.bottom)
+                
+                if let last = vm.notes.first {
+                    // 最近一条笔记的摘要预览
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("最近的一条笔记")
+                            .font(.headline)
+                        Text(last.summary.isEmpty ? last.text : last.summary)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                        
+                        HStack {
+                            Label(last.sentiment.rawValue, systemImage: "face.smiling")
+                                .font(.caption)
+                                .foregroundStyle(colorFor(sentiment: last.sentiment))
+                            Spacer()
+                            Text(last.createdAt, style: .date)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(14)
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                }
             }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isTextEditorFocused = false
         }
         .navigationTitle("Relo · 智能笔记")
     }
@@ -259,11 +291,4 @@ struct NoteEditorPage: View {
         case .negative: return .red
         }
     }
-}
-
-// MARK: - 预览
-
-#Preview {
-    let context = PersistenceController.shared.container.viewContext
-    ContentView(context: context)
 }
