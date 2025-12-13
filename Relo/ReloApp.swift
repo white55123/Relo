@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import UserNotifications
 
 @main
 struct ReloApp: App {
@@ -16,6 +17,28 @@ struct ReloApp: App {
         WindowGroup {
             ContentView(context: persistenceController.container.viewContext)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .task {
+                    await checkNotificationPermission()
+                }
+        }
+    }
+    
+    private func checkNotificationPermission() async {
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        
+        if settings.authorizationStatus == .notDetermined {
+            // 首次使用，请求权限
+            do {
+                let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+                if granted {
+                    print("通知权限已授予")
+                } else {
+                    print("用户拒绝了通知权限")
+                }
+            } catch {
+                print("请求通知权限失败: \(error)")
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import CoreData
+import UserNotifications
 
 // MARK: - 基础数据模型（后续可迁移到独立文件）
 
@@ -13,8 +14,9 @@ enum Sentiment: String {
 struct TodoItem: Identifiable {
     let id = UUID()
     var text: String
-    var dueDate: Date?
-    var isDone: Bool = false
+    var dueDate: Date?                      //待办时间
+    var isDone: Bool = false                //是否完成待办
+    var reminderScheduled: Bool = false     // 是否设置提醒
 }
 
 struct Note: Identifiable {
@@ -60,6 +62,109 @@ class NotesViewModel: ObservableObject {
         }
         
         notes[noteIndex].todos[todoIndex].isDone.toggle()
+    }
+    
+    //MARK: - 提醒功能
+    /// 请求通知权限
+    func requestNotificationPermission() async -> Bool {
+        do {
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            return granted
+        } catch {
+            NSLog("请求通知权限失败: \(error)")
+            return false
+        }
+    }
+    
+    /// 检查通知权限状态
+    func checkNotificationPermission() async -> Bool {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        return settings.authorizationStatus == .authorized
+    }
+    
+    /// 设置提醒
+    func scheduleReminder(for todo: TodoItem, note: Note, timeBefore: TimeInterval = 3600) async {
+        //1.检查是否有到期时间
+        guard let dueDate = todo.dueDate else {
+            NSLog("待办没有到期时间，无法设置提醒")
+            return
+        }
+        
+        //2.检查权限
+        let hasPermission = await checkNotificationPermission()
+        if !hasPermission {
+            let granted = await requestNotificationPermission()
+            if !granted {
+                NSLog("用户拒绝了通知权限")
+                return
+            }
+        }
+        
+        // 3. 计算提醒时间（到期时间 - 提前时间）
+        let reminderDate = dueDate.addingTimeInterval(-timeBefore)
+        
+        // 4. 检查提醒时间是否已过
+        if reminderDate <= Date() {
+            NSLog("提醒时间已过，无法设置提醒")
+            return
+        }
+        
+        // 5. 创建通知内容
+        let content = UNMutableNotificationContent()
+        content.title = "待办提醒"
+        content.body = todo.text
+        content.sound = .default
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "zh_CN")
+        content.subtitle = "到期时间: \(formatter.string(from: dueDate))"
+        
+        // 6. 创建触发时间
+        let timeInterval = reminderDate.timeIntervalSinceNow
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+        
+        // 7. 创建通知请求
+        let identifier = todo.id.uuidString
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        // 8. 添加到通知中心
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+            
+            // 9. 更新待办的提醒状态
+            if let noteIndex = notes.firstIndex(where: {$0.id == note.id}),
+               let todoIndex = notes[noteIndex].todos.firstIndex(where: {$0.id == todo.id}) {
+                notes[noteIndex].todos[todoIndex].reminderScheduled = true
+            }
+            NSLog("提醒设置成功，将在 \(formatter.string(from: reminderDate)) 提醒")
+        } catch {
+            NSLog("设置提醒失败: \(error)")
+        }
+    }
+    
+    /// 取消提醒
+    func cancelReminder(for todoId: UUID) {
+        let identifier = todoId.uuidString
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
+        
+        // 更新待办的提醒状态
+        for noteIndex in notes.indices {
+            if let todoIndex = notes[noteIndex].todos.firstIndex(where: { $0.id == todoId }) {
+                notes[noteIndex].todos[todoIndex].reminderScheduled = false
+                break
+            }
+        }
+        
+        NSLog("提醒已取消")
+    }
+    
+    /// 快速设置提醒（提前 1 小时）
+    func quickScheduleReminder(for todo: TodoItem, note: Note) {
+        Task { @MainActor in
+            await scheduleReminder(for: todo, note: note, timeBefore: 3600)  // 提前 1 小时
+        }
     }
     
     //分析笔记内容
@@ -201,6 +306,14 @@ struct ContentView: View {
             }
             
             NavigationStack {
+                // 笔记列表页
+                TodoListView(vm: vm)
+            }
+            .tabItem {
+                Label("待办", systemImage: "checkmark.circle")
+            }
+            
+            NavigationStack {
                 // 设置页
                 SettingView()
             }
@@ -208,10 +321,9 @@ struct ContentView: View {
                 Label("设置", systemImage: "gearshape")
             }
         }
+        .tint(.blue)
     }
 }
-
-// MARK: - 笔记编辑页
 
 // MARK: - 笔记编辑页
 
@@ -220,71 +332,151 @@ struct NoteEditorPage: View {
     @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("快速记一条笔记")
-                        .font(.title2.weight(.semibold))
+        ZStack {
+            // ✅ 新增：渐变背景
+            LinearGradient(
+                colors: [
+                    Color(red: 0.95, green: 0.97, blue: 1.0),
+                    Color(red: 0.98, green: 0.99, blue: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 20) {
+                    // ✅ 优化：标题区域
+                    Spacer()
                     
-                    TextEditor(text: $vm.currentText)
-                        .frame(minHeight: 180)
-                        .padding(10)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(14)
-                        .focused($isTextEditorFocused)
-                    
-                    HStack {
-                        Spacer()
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .font(.title2)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                            Text("快速记一条笔记")
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(.primary)
+                        }
+                        
+                        // ✅ 优化：输入框卡片
+                        ZStack(alignment: .topLeading) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
+                            
+                            if vm.currentText.isEmpty {
+                                Text("输入你的想法、任务或想法...")
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
+                            }
+                            
+                            TextEditor(text: $vm.currentText)
+                                .frame(minHeight: 200)
+                                .padding(12)
+                                .scrollContentBackground(.hidden)
+                                .focused($isTextEditorFocused)
+                        }
+                        .frame(minHeight: 200)
+            
                         Button {
                             isTextEditorFocused = false
                             vm.addAndAnalyzeNote()
                         } label: {
-                            Label("保存并智能分析", systemImage: "sparkles")
-                                .padding(.horizontal, 12)
+                            HStack(spacing: 8) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("保存并智能分析")
+                                    .font(.headline)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundStyle(.white)
+                            .cornerRadius(12)
+                            .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.plain)
                         .disabled(vm.currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .opacity(vm.currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1.0)
                     }
-                }
-                .padding()
-                
-                if let last = vm.notes.first {
-                    // 最近一条笔记的摘要预览
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("最近的一条笔记")
-                            .font(.headline)
-                        Text(last.summary.isEmpty ? last.text : last.summary)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                        
-                        HStack {
-                            Label(last.sentiment.rawValue, systemImage: "face.smiling")
-                                .font(.caption)
-                                .foregroundStyle(colorFor(sentiment: last.sentiment))
-                            Spacer()
-                            Text(last.createdAt, style: .date)
-                                .font(.caption2)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    
+                    if let last = vm.notes.first {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundStyle(.blue)
+                                Text("最近的一条笔记")
+                                    .font(.headline.weight(.semibold))
+                            }
+                            
+                            Text(last.summary.isEmpty ? last.text : last.summary)
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                            
+                            HStack {
+                                HStack(spacing: 4) {
+                                    Image(systemName: sentimentIcon(for: last.sentiment))
+                                        .font(.caption)
+                                    Text(last.sentiment.rawValue)
+                                        .font(.caption.weight(.medium))
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(sentimentColor(for: last.sentiment).opacity(0.15))
+                                .foregroundStyle(sentimentColor(for: last.sentiment))
+                                .cornerRadius(8)
+                                
+                                Spacer()
+                                
+                                Text(last.createdAt, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
+                        )
+                        .padding(.horizontal, 20)
                     }
-                    .padding()
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(14)
-                    .padding(.horizontal)
-                    .padding(.bottom)
+                    
+                    Spacer(minLength: 40)
                 }
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isTextEditorFocused = false
-        }
-        .navigationTitle("Relo · 智能笔记")
+//        .navigationTitle("Relo")
+//        .navigationBarTitleDisplayMode(.large)
     }
     
-    private func colorFor(sentiment: Sentiment) -> Color {
+    private func sentimentIcon(for sentiment: Sentiment) -> String {
+        switch sentiment {
+        case .positive: return "face.smiling.fill"
+        case .neutral: return "face.dashed"
+        case .negative: return "face.dashed.fill"
+        }
+    }
+    
+    private func sentimentColor(for sentiment: Sentiment) -> Color {
         switch sentiment {
         case .positive: return .green
         case .neutral: return .gray

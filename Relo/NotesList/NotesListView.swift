@@ -70,7 +70,7 @@ struct NotesListView: View {
                             if !note.todos.isEmpty {
                                 VStack(alignment: .leading, spacing: 6) {
                                     ForEach(note.todos) { todo in
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: 4) {
                                             HStack(alignment: .top, spacing: 8) {
                                                 Button {
                                                     vm.toggleTodo(noteId: note.id, todoId: todo.id)
@@ -81,31 +81,57 @@ struct NotesListView: View {
                                                 }
                                                 .buttonStyle(.plain)
                                                 
-                                                // 待办文本（完成时显示删除线）
                                                 Text(todo.text)
                                                     .font(.caption)
                                                     .strikethrough(todo.isDone)
                                                     .foregroundStyle(todo.isDone ? .secondary : .primary)
+                                                
+                                                Spacer()
                                             }
                                             
-                                            // 显示解析出的时间
-                                            if let dueDate = todo.dueDate {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "clock")
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.secondary)
-                                                    Text(dueDate, style: .date)
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.secondary)
-                                                    Text("•")
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.secondary)
-                                                    Text(dueDate, style: .time)
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.secondary)
+                                            // 显示时间和提醒按钮
+                                            HStack(spacing: 8) {
+                                                if let dueDate = todo.dueDate {
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: "clock")
+                                                            .font(.caption2)
+                                                            .foregroundStyle(.secondary)
+                                                        Text(dueDate, style: .date)
+                                                            .font(.caption2)
+                                                            .foregroundStyle(.secondary)
+                                                        Text("•")
+                                                            .font(.caption2)
+                                                            .foregroundStyle(.secondary)
+                                                        Text(dueDate, style: .time)
+                                                            .font(.caption2)
+                                                            .foregroundStyle(.secondary)
+                                                    }
                                                 }
-                                                .padding(.leading, 32)
+                                                
+                                                Spacer()
+                                                
+                                                // 设置提醒按钮
+                                                if !todo.isDone, let dueDate = todo.dueDate {
+                                                    if todo.reminderScheduled {
+                                                        Button {
+                                                            vm.cancelReminder(for: todo.id)
+                                                        } label: {
+                                                            Label("取消提醒", systemImage: "bell.slash.fill")
+                                                                .font(.caption2)
+                                                                .foregroundStyle(.orange)
+                                                        }
+                                                    } else {
+                                                        Button {
+                                                            vm.quickScheduleReminder(for: todo, note: note)
+                                                        } label: {
+                                                            Label("设置提醒", systemImage: "bell.fill")
+                                                                .font(.caption2)
+                                                                .foregroundStyle(.blue)
+                                                        }
+                                                    }
+                                                }
                                             }
+                                            .padding(.leading, 32)
                                         }
                                     }
                                 }
