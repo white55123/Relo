@@ -53,6 +53,74 @@ class NotesViewModel: ObservableObject {
         currentText = ""
     }
     
+    func deleteNote(noteId: UUID) {
+        guard let noteIndex = notes.firstIndex(where: {$0.id == noteId}) else {
+            return
+        }
+        
+        let note = notes[noteIndex]
+        
+        // 1. 取消所有待办的提醒
+        for todo in note.todos {
+            if todo.reminderScheduled {
+                cancelReminder(for: todo.id)
+            }
+        }
+        
+        // 2. 先保存笔记信息，再删除（用于 Core Data 匹配）
+        let noteText = note.text
+        let noteCreatedAt = note.createdAt
+        
+        // 3. 从内存中删除笔记
+        notes.remove(at: noteIndex)
+        
+        // 4. 从 Core Data 中删除笔记（使用保存的信息匹配）
+        deleteNoteFromCoreData(text: noteText, createdAt: noteCreatedAt)
+    }
+    
+    private func deleteNoteFromCoreData(text: String, createdAt: Date) {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
+        
+        do {
+            let results = try context.fetch(request)
+            for obj in results {
+                if let objText = obj.value(forKey: "text") as? String,
+                   let objCreatedAt = obj.value(forKey: "createdAt") as? Date,
+                   objText == text,
+                   abs(objCreatedAt.timeIntervalSince(createdAt)) < 1.0 {  // 时间差小于 1 秒认为是同一条
+                    
+                    // 先删除对应的待办
+                    deleteTodosFromCoreData(noteId: obj.objectID)
+                    
+                    // 再删除笔记
+                    context.delete(obj)
+                    break
+                }
+            }
+            
+            try context.save()
+            NSLog("笔记删除成功")
+        } catch {
+            NSLog("删除笔记失败: \(error)")
+        }
+    }
+    
+    private func deleteTodosFromCoreData(noteId: NSManagedObjectID) {
+        let noteIdString = noteId.uriRepresentation().absoluteString
+        let request = NSFetchRequest<NSManagedObject>(entityName: "TodoEntity")
+        request.predicate = NSPredicate(format: "noteId == %@", noteIdString)
+        
+        do {
+            let results = try context.fetch(request)
+            for obj in results {
+                context.delete(obj)
+            }
+            try context.save()
+        } catch {
+            print("删除待办失败: \(error)")
+        }
+    }
+    
     //MARK: - 代办操作
     ///切换待办的完成状态
     func toggleTodo(noteId: UUID, todoId: UUID) {
@@ -361,25 +429,24 @@ struct NoteEditorPage: View {
                                     )
                                 )
                             Text("快速记一条笔记")
-                                .font(.title2.weight(.bold))
+                                .font(.title.weight(.bold))
                                 .foregroundStyle(.primary)
                         }
-                        
-                        // ✅ 优化：输入框卡片
+                    
                         ZStack(alignment: .topLeading) {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color(.systemBackground))
                                 .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
                             
                             if vm.currentText.isEmpty {
-                                Text("输入你的想法、任务或想法...")
+                                Text("输入你的任务或想法...")
                                     .foregroundStyle(.secondary)
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 12)
                             }
                             
                             TextEditor(text: $vm.currentText)
-                                .frame(minHeight: 200)
+                                .frame(minHeight: 400)
                                 .padding(12)
                                 .scrollContentBackground(.hidden)
                                 .focused($isTextEditorFocused)

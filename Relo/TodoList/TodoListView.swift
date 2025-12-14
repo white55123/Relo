@@ -140,7 +140,6 @@ struct TodoRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // ✅ 优化：完成按钮
             Button {
                 vm.toggleTodo(noteId: note.id, todoId: todo.id)
             } label: {
@@ -155,13 +154,11 @@ struct TodoRowView: View {
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 8) {
-                // ✅ 优化：待办文本
                 Text(todo.text)
                     .font(.body.weight(.medium))
                     .strikethrough(todo.isDone)
                     .foregroundStyle(todo.isDone ? .secondary : .primary)
                 
-                // ✅ 优化：时间信息
                 HStack(spacing: 8) {
                     if let dueDate = todo.dueDate {
                         Label {
@@ -192,7 +189,6 @@ struct TodoRowView: View {
                     }
                 }
                 
-                // ✅ 优化：来源笔记
                 HStack(spacing: 4) {
                     Image(systemName: "note.text")
                         .font(.caption2)
@@ -203,7 +199,6 @@ struct TodoRowView: View {
                         .lineLimit(1)
                 }
                 
-                // ✅ 优化：提醒按钮
                 if !todo.isDone, let dueDate = todo.dueDate {
                     HStack {
                         if todo.reminderScheduled {
