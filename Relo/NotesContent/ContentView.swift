@@ -20,7 +20,7 @@ struct TodoItem: Identifiable {
 }
 
 struct Note: Identifiable {
-    let id = UUID()
+    var id = UUID()
     var text: String
     var createdAt: Date = Date()
     var keywords: [String] = []
@@ -51,6 +51,22 @@ class NotesViewModel: ObservableObject {
         notes.insert(note, at: 0)
         saveToCoreData(note: note)
         currentText = ""
+    }
+    
+    func updateNote(noteId: UUID, newText: String) {
+        guard let noteIndex = notes.firstIndex(where: {$0.id == noteId}) else {
+            return
+        }
+        
+        guard !newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+        
+        var updatedNote = Note(text: newText, createdAt: notes[noteIndex].createdAt)
+        updatedNote.id = notes[noteIndex].id
+        analyze(&updatedNote)
+        
+        notes[noteIndex] = updatedNote
     }
     
     func deleteNote(noteId: UUID) {

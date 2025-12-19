@@ -9,8 +9,8 @@ import SwiftUI
 
 struct NotesListView: View {
     @ObservedObject var vm: NotesViewModel
-    @State private var noteToDelete: Note?  //要删除的笔记
-    @State private var showDeleteAlert = false  //显示删除确认提示框
+    @State private var noteToDelete: Note?
+    @State private var showDeleteAlert = false
     
     var body: some View {
         Group {
@@ -27,131 +27,90 @@ struct NotesListView: View {
             } else {
                 List {
                     ForEach(vm.notes) { note in
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Header（标题）
-                            Text(note.todos.isEmpty ? "笔记" : "自动识别的待办 (\(note.todos.count))")
-                                .font(.headline.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                                .textCase(nil)
-                            
-                            // 笔记内容
-                            VStack(alignment: .leading, spacing: 4) {
-                                if !note.summary.isEmpty {
-                                    Text(note.summary)
-                                        .font(.headline)
-                                }
-                                Text(note.text)
-                                    .font(.subheadline)
+                        NavigationLink {
+                            NoteDetailView(note: note, vm: vm)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Header（标题）
+                                Text(note.todos.isEmpty ? "笔记" : "自动识别的待办 (\(note.todos.count))")
+                                    .font(.headline.weight(.semibold))
                                     .foregroundStyle(.secondary)
-                            }
-                            
-                            // 关键词
-                            if !note.keywords.isEmpty {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack {
-                                        ForEach(note.keywords, id: \.self) { kw in
-                                            Text(kw)
-                                                .font(.caption)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.blue.opacity(0.1))
-                                                .cornerRadius(8)
+                                    .textCase(nil)
+                                
+                                // 笔记内容
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if !note.summary.isEmpty {
+                                        Text(note.summary)
+                                            .font(.headline)
+                                    }
+                                    Text(note.text)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(3)
+                                }
+                                
+                                // 关键词
+                                if !note.keywords.isEmpty {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack {
+                                            ForEach(note.keywords, id: \.self) { kw in
+                                                Text(kw)
+                                                    .font(.caption)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(Color.blue.opacity(0.1))
+                                                    .cornerRadius(8)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            
-                            // 底部信息
-                            HStack {
-                                Label(note.sentiment.rawValue, systemImage: "face.smiling")
-                                    .font(.caption)
-                                    .foregroundStyle(colorFor(sentiment: note.sentiment))
-                                Spacer()
-                                Text(note.createdAt, style: .date)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                            
-                            // 待办列表
-                            if !note.todos.isEmpty {
-                                Divider()
-                                    .padding(.vertical, 4)
                                 
-                                VStack(alignment: .leading, spacing: 6) {
-                                    ForEach(note.todos) { todo in
-                                        VStack(alignment: .leading, spacing: 4) {
+                                // 底部信息
+                                HStack {
+                                    Label(note.sentiment.rawValue, systemImage: "face.smiling")
+                                        .font(.caption)
+                                        .foregroundStyle(colorFor(sentiment: note.sentiment))
+                                    Spacer()
+                                    Text(note.createdAt, style: .date)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                // 待办列表（预览）
+                                if !note.todos.isEmpty {
+                                    Divider()
+                                        .padding(.vertical, 4)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        ForEach(note.todos.prefix(2)) { todo in
                                             HStack(alignment: .top, spacing: 8) {
-                                                Button {
-                                                    vm.toggleTodo(noteId: note.id, todoId: todo.id)
-                                                } label: {
-                                                    Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
-                                                        .foregroundStyle(todo.isDone ? .green : .blue)
-                                                        .font(.title3)
-                                                }
-                                                .buttonStyle(.plain)
-                                                
+                                                Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(todo.isDone ? .green : .blue)
+                                                    .font(.caption)
                                                 Text(todo.text)
                                                     .font(.caption)
                                                     .strikethrough(todo.isDone)
                                                     .foregroundStyle(todo.isDone ? .secondary : .primary)
-                                                
+                                                    .lineLimit(1)
                                                 Spacer()
                                             }
-                                            
-                                            // 显示时间和提醒按钮
-                                            HStack(spacing: 8) {
-                                                if let dueDate = todo.dueDate {
-                                                    HStack(spacing: 4) {
-                                                        Image(systemName: "clock")
-                                                            .font(.caption2)
-                                                            .foregroundStyle(.secondary)
-                                                        Text(dueDate, style: .date)
-                                                            .font(.caption2)
-                                                            .foregroundStyle(.secondary)
-                                                        Text("•")
-                                                            .font(.caption2)
-                                                            .foregroundStyle(.secondary)
-                                                        Text(dueDate, style: .time)
-                                                            .font(.caption2)
-                                                            .foregroundStyle(.secondary)
-                                                    }
-                                                }
-                                                
-                                                Spacer()
-                                                
-                                                // 设置提醒按钮
-                                                if !todo.isDone, let dueDate = todo.dueDate {
-                                                    if todo.reminderScheduled {
-                                                        Button {
-                                                            vm.cancelReminder(for: todo.id)
-                                                        } label: {
-                                                            Label("取消提醒", systemImage: "bell.slash.fill")
-                                                                .font(.caption2)
-                                                                .foregroundStyle(.orange)
-                                                        }
-                                                    } else {
-                                                        Button {
-                                                            vm.quickScheduleReminder(for: todo, note: note)
-                                                        } label: {
-                                                            Label("设置提醒", systemImage: "bell.fill")
-                                                                .font(.caption2)
-                                                                .foregroundStyle(.blue)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            .padding(.leading, 32)
+                                        }
+                                        
+                                        if note.todos.count > 2 {
+                                            Text("还有 \(note.todos.count - 2) 个待办...")
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
                                         }
                                     }
                                 }
                             }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                            )
                         }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemBackground))
-                                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-                        )
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
