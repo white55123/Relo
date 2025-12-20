@@ -38,10 +38,13 @@ class NotesViewModel: ObservableObject {
     
     @Published var currentText: String = ""
     @Published var notes: [Note] = []
+    @Published var isLoading: Bool = true
     
     init(context: NSManagedObjectContext) {
         self.context = context
-        loadNotes()
+        Task {
+            await loadNotes()
+        }
     }
     
     func addAndAnalyzeNote() {
@@ -146,6 +149,17 @@ class NotesViewModel: ObservableObject {
         }
         
         notes[noteIndex].todos[todoIndex].isDone.toggle()
+    }
+    
+    ///更新待办的到期时间
+    func updateTodoDueDate(noteId: UUID, todoId: UUID, dueDate: Date) {
+        guard let noteIndex = notes.firstIndex(where: { $0.id == noteId}),
+              let todoIndex = notes[noteIndex].todos.firstIndex(where: { $0.id == todoId}) else {
+            NSLog("未找到匹配的笔记来更新待办的到期时间")
+            return
+        }
+        
+        notes[noteIndex].todos[todoIndex].dueDate = dueDate
     }
     
     //MARK: - 提醒功能
@@ -323,7 +337,10 @@ class NotesViewModel: ObservableObject {
     
     // MARK: - Core Data 持久化
     
-    private func loadNotes() {
+    private func loadNotes() async{
+        isLoading = true
+        try? await Task.sleep(nanoseconds: 1000_000_000)  // 1 秒
+        
         let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
         
@@ -344,6 +361,7 @@ class NotesViewModel: ObservableObject {
         } catch {
             print("读取历史笔记失败: \(error)")
         }
+        isLoading = false
     }
     
     private func saveToCoreData(note: Note) {
@@ -373,39 +391,45 @@ struct ContentView: View {
     }
     
     var body: some View {
-        TabView {
-            NavigationStack {
-                NoteEditorPage(vm: vm)
-            }
-            .tabItem {
-                Label("记笔记", systemImage: "square.and.pencil")
-            }
-            
-            NavigationStack {
-                // 笔记列表页
-                NotesListView(vm: vm)
-            }
-            .tabItem {
-                Label("笔记列表", systemImage: "list.bullet")
-            }
-            
-            NavigationStack {
-                // 笔记列表页
-                TodoListView(vm: vm)
-            }
-            .tabItem {
-                Label("待办", systemImage: "checkmark.circle")
-            }
-            
-            NavigationStack {
-                // 设置页
-                SettingView()
-            }
-            .tabItem {
-                Label("设置", systemImage: "gearshape")
+        Group {
+            if vm.isLoading {
+                LoadingView()
+            } else {
+                TabView {
+                    NavigationStack {
+                        NoteEditorPage(vm: vm)
+                    }
+                    .tabItem {
+                        Label("记笔记", systemImage: "square.and.pencil")
+                    }
+                    
+                    NavigationStack {
+                        // 笔记列表页
+                        NotesListView(vm: vm)
+                    }
+                    .tabItem {
+                        Label("笔记列表", systemImage: "list.bullet")
+                    }
+                    
+                    NavigationStack {
+                        // 笔记列表页
+                        TodoListView(vm: vm)
+                    }
+                    .tabItem {
+                        Label("待办", systemImage: "checkmark.circle")
+                    }
+                    
+                    NavigationStack {
+                        // 设置页
+                        SettingView()
+                    }
+                    .tabItem {
+                        Label("设置", systemImage: "gearshape")
+                    }
+                }
+                .tint(.blue)
             }
         }
-        .tint(.blue)
     }
 }
 
