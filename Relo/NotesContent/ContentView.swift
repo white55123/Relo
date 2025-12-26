@@ -12,11 +12,20 @@ enum Sentiment: String {
 }
 
 struct TodoItem: Identifiable {
-    let id = UUID()
+    let id: UUID
     var text: String
     var dueDate: Date?                      //待办时间
     var isDone: Bool = false                //是否完成待办
     var reminderScheduled: Bool = false     // 是否设置提醒
+    
+    // 初始化方法：支持传入 id（用于从 Core Data 加载）
+    init(id: UUID = UUID(), text: String, dueDate: Date? = nil, isDone: Bool = false, reminderScheduled: Bool = false) {
+        self.id = id
+        self.text = text
+        self.dueDate = dueDate
+        self.isDone = isDone
+        self.reminderScheduled = reminderScheduled
+    }
 }
 
 struct Note: Identifiable {
@@ -159,7 +168,63 @@ class NotesViewModel: ObservableObject {
             return
         }
         
+        // 更新内存中的数据
         notes[noteIndex].todos[todoIndex].dueDate = dueDate
+        saveTodoToCoreData(todo: notes[noteIndex].todos[todoIndex], noteId: noteId)
+    }
+    
+    private func saveTodoToCoreData(todo: TodoItem, noteId: UUID) {
+        // 1. 找到对应的笔记在 Core Data 中的记录
+        let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
+        
+        do {
+            let results = try context.fetch(request)
+            
+            // 通过笔记 ID 匹配（通过笔记内容匹配）
+            for noteObj in results {
+                if let noteText = noteObj.value(forKey: "text") as? String,
+                   let note = notes.first(where: { $0.id == noteId && $0.text == noteText }) {
+                    
+                    let noteIdString = noteObj.objectID.uriRepresentation().absoluteString
+                    
+                    // 2. 查找或创建待办记录
+                    let todoRequest = NSFetchRequest<NSManagedObject>(entityName: "TodoEntity")
+                    todoRequest.predicate = NSPredicate(format: "todoId == %@ AND noteId == %@", todo.id.uuidString, noteIdString)
+                    
+                    let todoResults = try context.fetch(todoRequest)
+                    let todoObj: NSManagedObject
+                    
+                    if let existing = todoResults.first {
+                        // 更新已存在的待办
+                        todoObj = existing
+                    } else {
+                        // 创建新的待办记录
+                        guard let entity = NSEntityDescription.entity(forEntityName: "TodoEntity", in: context) else {
+                            NSLog("找不到 TodoEntity 定义")
+                            return
+                        }
+                        todoObj = NSManagedObject(entity: entity, insertInto: context)
+                        todoObj.setValue(todo.id.uuidString, forKey: "todoId")
+                        todoObj.setValue(noteIdString, forKey: "noteId")
+                    }
+                    
+                    // 3. 更新待办属性
+                    todoObj.setValue(todo.text, forKey: "text")
+                    todoObj.setValue(todo.dueDate, forKey: "dueDate")
+                    todoObj.setValue(todo.isDone, forKey: "isDone")
+                    todoObj.setValue(todo.reminderScheduled, forKey: "reminderScheduled")
+                    
+                    // 4. 保存
+                    try context.save()
+                    NSLog("待办时间更新成功")
+                    return
+                }
+            }
+            
+            NSLog("未找到对应的笔记记录")
+        } catch {
+            NSLog("保存待办到 Core Data 失败: \(error)")
+        }
     }
     
     //MARK: - 提醒功能
@@ -355,6 +420,10 @@ class NotesViewModel: ObservableObject {
                 
                 var note = Note(text: text, createdAt: createdAt)
                 analyze(&note)
+                
+                // 从 Core Data 加载已保存的待办数据
+                loadTodosFromCoreData(for: &note, noteObjectID: obj.objectID)
+                
                 loaded.append(note)
             }
             self.notes = loaded
@@ -362,6 +431,43 @@ class NotesViewModel: ObservableObject {
             print("读取历史笔记失败: \(error)")
         }
         isLoading = false
+    }
+    
+    // 从 Core Data 加载待办数据
+    private func loadTodosFromCoreData(for note: inout Note, noteObjectID: NSManagedObjectID) {
+        let noteIdString = noteObjectID.uriRepresentation().absoluteString
+        let request = NSFetchRequest<NSManagedObject>(entityName: "TodoEntity")
+        request.predicate = NSPredicate(format: "noteId == %@", noteIdString)
+        
+        do {
+            let results = try context.fetch(request)
+            var savedTodos: [TodoItem] = []
+            
+            for obj in results {
+                guard
+                    let text = obj.value(forKey: "text") as? String,
+                    let todoIdString = obj.value(forKey: "todoId") as? String,
+                    let todoId = UUID(uuidString: todoIdString)
+                else { continue }
+                
+                let dueDate = obj.value(forKey: "dueDate") as? Date
+                let isDone = obj.value(forKey: "isDone") as? Bool ?? false
+                let reminderScheduled = obj.value(forKey: "reminderScheduled") as? Bool ?? false
+                
+                var todo = TodoItem(id: todoId, text: text, dueDate: dueDate, isDone: isDone, reminderScheduled: reminderScheduled)
+                savedTodos.append(todo)
+            }
+            
+            // 合并已保存的待办和 NLP 分析出的待办
+            // 优先使用已保存的待办（如果 ID 匹配），否则使用 NLP 分析出的待办
+            let savedTodoIds = Set(savedTodos.map { $0.id })
+            let newTodos = note.todos.filter { !savedTodoIds.contains($0.id) }
+            
+            // 合并：已保存的待办 + 新分析出的待办
+            note.todos = savedTodos + newTodos
+        } catch {
+            NSLog("加载待办数据失败: \(error)")
+        }
     }
     
     private func saveToCoreData(note: Note) {

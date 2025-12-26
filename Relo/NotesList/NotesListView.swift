@@ -32,7 +32,7 @@ struct NotesListView: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 12) {
                                 // Header（标题）
-                                Text(note.todos.isEmpty ? "笔记" : "自动识别的待办 (\(note.todos.count))")
+                                Text(note.todos.isEmpty ? "笔记" : "自动识别的待办")
                                     .font(.headline.weight(.semibold))
                                     .foregroundStyle(.secondary)
                                     .textCase(nil)
