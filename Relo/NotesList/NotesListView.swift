@@ -12,9 +12,16 @@ struct NotesListView: View {
     @State private var noteToDelete: Note?
     @State private var showDeleteAlert = false
     
+    // 过滤掉独立待办的笔记
+    private var filteredNotes: [Note] {
+        vm.notes.filter { note in
+            note.text != "__INDEPENDENT_TODO__"
+        }
+    }
+    
     var body: some View {
         Group {
-            if vm.notes.isEmpty {
+            if filteredNotes.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "tray")
                         .font(.largeTitle)
@@ -26,7 +33,7 @@ struct NotesListView: View {
                 .background(Color(.systemBackground))
             } else {
                 List {
-                    ForEach(vm.notes) { note in
+                    ForEach(filteredNotes) { note in
                         NavigationLink {
                             NoteDetailView(note: note, vm: vm)
                         } label: {

@@ -173,6 +173,20 @@ class NotesViewModel: ObservableObject {
         saveTodoToCoreData(todo: notes[noteIndex].todos[todoIndex], noteId: noteId)
     }
     
+    func createIndependentTodo(text: String, dueDate: Date?) {
+        var tempNote = Note(text: "__INDEPENDENT_TODO__")
+        tempNote.id = UUID()
+        tempNote.createdAt = Date()
+        
+        let todo = TodoItem(text: text, dueDate: dueDate)
+        
+        tempNote.todos = [todo]
+        
+        notes.insert(tempNote, at: 0)
+        
+        saveToCoreData(note: tempNote)
+    }
+    
     private func saveTodoToCoreData(todo: TodoItem, noteId: UUID) {
         // 1. 找到对应的笔记在 Core Data 中的记录
         let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")

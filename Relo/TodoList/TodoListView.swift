@@ -23,6 +23,7 @@ enum TimeStatus {
 struct TodoListView: View {
     @ObservedObject var vm: NotesViewModel
     @State private var selectedPeriod : TimePeriod = .today     //选中的时间段
+    @State private var showAddTodo = false
     
     // 从所有笔记中提取所有待办(根据时间段过滤)
     private var allTodos: [(note: Note, todo: TodoItem)] {
@@ -98,69 +99,40 @@ struct TodoListView: View {
     }
         
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
             VStack(spacing: 0) {
-                HStack {
-                    Text("我的待办列表")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(DateHelper.formatTodayDate())
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(.secondary)
-                        Text(DateHelper.formatTodayWeekday())
-                            .font(.title)
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("我的待办列表")
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(.primary)
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text(DateHelper.formatTodayDate())
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(.secondary)
+                            Text(DateHelper.formatTodayWeekday())
+                                .font(.title)
+                                .foregroundStyle(.primary)
+                        }
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(Color(.systemBackground))
-                
-                Divider()
-                
-                Picker("时间段", selection: $selectedPeriod) {
-                    ForEach(TimePeriod.allCases, id: \.self) { period in
-                        Text(period.rawValue)
-                            .font(.system(size: 18, weight: .semibold))
-                            .tag(period)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .background(Color(.systemBackground))
+                    
+                    Divider()
+                    
+                    Picker("时间段", selection: $selectedPeriod) {
+                        ForEach(TimePeriod.allCases, id: \.self) { period in
+                            Text(period.rawValue)
+                                .font(.system(size: 18, weight: .semibold))
+                                .tag(period)
+                        }
                     }
-                }
-                .pickerStyle(.segmented)
-                .frame(height: 44)
-                .padding(.horizontal, 30)
-                .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.95, green: 0.97, blue: 1.0),
-                            Color(red: 0.98, green: 0.99, blue: 1.0)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                
-            }
-            .background(Color(.systemBackground))
-            
-            // 内容区域
-            Group {
-                if allTodos.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.badge.questionmark")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                        Text("还没有待办事项")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-                        Text("在笔记中添加包含时间的任务，\n会自动识别为待办事项")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .pickerStyle(.segmented)
+                    .frame(height: 44)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 16)
                     .background(
                         LinearGradient(
                             colors: [
@@ -171,44 +143,26 @@ struct TodoListView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                } else {
-                    if selectedPeriod == .today && !pendingTodos.isEmpty {
-                        TimelineTodoView(todos: pendingTodos, vm: vm)
-                    } else {
-                        List {
-                            if !pendingTodos.isEmpty {
-                                Section {
-                                    ForEach(pendingTodos, id: \.todo.id) { item in
-                                        TodoRowView(note: item.note, todo: item.todo, vm: vm)
-                                            .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                                            .listRowBackground(Color.clear)
-                                    }
-                                }
-                            }
-                            
-                            if !completedTodos.isEmpty {
-                                Section {
-                                    ForEach(completedTodos, id: \.todo.id) { item in
-                                        TodoRowView(note: item.note, todo: item.todo, vm: vm)
-                                            .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                                            .listRowBackground(Color.clear)
-                                    }
-                                } header: {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(DateHelper.formatTodayDate())
-                                            .font(.headline.weight(.bold))
-                                            .foregroundStyle(.secondary)
-                                        Text(DateHelper.formatTodayWeekday())
-                                            .font(.title)
-                                            .foregroundStyle(.primary)
-                                    }
-                                }
-                            }
+                    
+                }
+                .background(Color(.systemBackground))
+                
+                // 内容区域
+                Group {
+                    if allTodos.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.badge.questionmark")
+                                .font(.largeTitle)
+                                .foregroundStyle(.secondary)
+                            Text("还没有待办事项")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            Text("在笔记中添加包含时间的任务，\n会自动识别为待办事项")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
                         }
-                        .listStyle(.plain)
-                        .scrollContentBackground(.hidden)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(
                             LinearGradient(
                                 colors: [
@@ -219,15 +173,92 @@ struct TodoListView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
+                    } else {
+                        if selectedPeriod == .today && !pendingTodos.isEmpty {
+                            TimelineTodoView(todos: pendingTodos, vm: vm)
+                        } else {
+                            List {
+                                if !pendingTodos.isEmpty {
+                                    Section {
+                                        ForEach(pendingTodos, id: \.todo.id) { item in
+                                            TodoRowView(note: item.note, todo: item.todo, vm: vm)
+                                                .listRowSeparator(.hidden)
+                                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                                .listRowBackground(Color.clear)
+                                        }
+                                    }
+                                }
+                                
+                                if !completedTodos.isEmpty {
+                                    Section {
+                                        ForEach(completedTodos, id: \.todo.id) { item in
+                                            TodoRowView(note: item.note, todo: item.todo, vm: vm)
+                                                .listRowSeparator(.hidden)
+                                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                                .listRowBackground(Color.clear)
+                                        }
+                                    } header: {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(DateHelper.formatTodayDate())
+                                                .font(.headline.weight(.bold))
+                                                .foregroundStyle(.secondary)
+                                            Text(DateHelper.formatTodayWeekday())
+                                                .font(.title)
+                                                .foregroundStyle(.primary)
+                                        }
+                                    }
+                                }
+                            }
+                            .listStyle(.plain)
+                            .scrollContentBackground(.hidden)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.95, green: 0.97, blue: 1.0),
+                                        Color(red: 0.98, green: 0.99, blue: 1.0)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        }
                     }
                 }
             }
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                EmptyView()  // 隐藏默认导航栏标题
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    EmptyView()  // 隐藏默认导航栏标题
+                }
             }
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button {
+                        showAddTodo = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 56, height: 56)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 20)
+                }
+            }
+        }
+        .sheet(isPresented: $showAddTodo) {
+            AddTodoView(vm: vm)
         }
     }
 }
