@@ -47,6 +47,11 @@ class NLPAnalyzer {
         )
     }
     
+    // 对外提供简单的时间推断，供 fallback 逻辑复用
+    func inferDueDate(from text: String) -> Date? {
+        parseDate(from: text)
+    }
+    
     // MARK: - 语言识别
     
     private func detectLanguage(from text: String) -> NLLanguage {
@@ -335,7 +340,7 @@ class NLPAnalyzer {
     
     // MARK: - 任务识别
     
-    private func extractTodos(from text: String, language: NLLanguage) -> [TodoItem] {
+    private func extractTodos(from text: String, language _: NLLanguage) -> [TodoItem] {
         guard !text.isEmpty else { return [] }
         
         var todos: [TodoItem] = []
@@ -349,7 +354,8 @@ class NLPAnalyzer {
             "周一", "周二", "周三", "周四", "周五", "周六", "周日",
             "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日",
             "下周", "下个月", "下个星期",
-            "上午", "下午", "晚上", "中午", "凌晨",
+            "早上", "早晨", "清晨", "上午", "下午", "傍晚", "晚上", "中午", "凌晨",
+            "今晚", "明早", "明晚",
             "点", "时", "分", "刻"
         ]
         
@@ -357,12 +363,10 @@ class NLPAnalyzer {
         let actionWords: Set<String> = [
             "提交", "完成", "开会", "讨论", "准备", "检查", "审核", "修改", "发送",
             "回复", "处理", "安排", "计划", "制定", "执行", "实施", "落实",
-            "汇报", "报告", "总结", "分析", "研究", "学习", "复习", "练习"
+            "汇报", "报告", "总结", "分析", "研究", "学习", "复习", "练习",
+            "买", "购买", "采购", "联系", "沟通", "提醒", "取", "拿", "寄", "送",
+            "缴费", "付款", "支付", "预约", "看病", "就诊", "取药"
         ]
-        
-        let tagger = NLTagger(tagSchemes: [.lexicalClass, .nameType])
-        tagger.string = text
-        tagger.setLanguage(language, range: text.startIndex..<text.endIndex)
         
         for sentence in sentences {
             // 检查是否包含时间词和动作词
@@ -417,7 +421,9 @@ class NLPAnalyzer {
         
         // 2. 如果没有找到星期，解析相对日期
         if targetDate == nil {
-            if text.contains("今天") {
+            if text.contains("明早") || text.contains("明晨") || text.contains("明晚") {
+                targetDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+            } else if text.contains("今晚") || text.contains("今早") || text.contains("今晨") || text.contains("今天") {
                 targetDate = calendar.startOfDay(for: now)
             } else if text.contains("明天") {
                 targetDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
@@ -453,27 +459,38 @@ class NLPAnalyzer {
         var hour: Int? = nil
         var minute = 0
         
-        // 1. 先解析具体时间点（优先匹配长的词："十一"、"十二"）
-        let hourMap: [(String, Int)] = [
-            ("十一", 11), ("十二", 12),  // 先匹配长的
-            ("一", 1), ("二", 2), ("三", 3), ("四", 4), ("五", 5),
-            ("六", 6), ("七", 7), ("八", 8), ("九", 9), ("十", 10)
-        ]
+        if let digitalTime = extractDigitalTime(from: text) {
+            hour = digitalTime.hour
+            minute = digitalTime.minute
+        }
         
-        for (key, value) in hourMap {
-            if text.contains("\(key)点") || text.contains("\(key)时") {
-                hour = value
-                break
+        if hour == nil {
+            // 1. 先解析具体时间点（优先匹配长的词："十一"、"十二"）
+            let hourMap: [(String, Int)] = [
+                ("十一", 11), ("十二", 12),  // 先匹配长的
+                ("两", 2), ("一", 1), ("二", 2), ("三", 3), ("四", 4), ("五", 5),
+                ("六", 6), ("七", 7), ("八", 8), ("九", 9), ("十", 10)
+            ]
+            
+            for (key, value) in hourMap {
+                if text.contains("\(key)点") || text.contains("\(key)时") {
+                    hour = value
+                    break
+                }
             }
         }
         
         // 2. 如果没有找到具体时间点，根据时间段设置默认时间
         if hour == nil {
-            if text.contains("上午") {
+            if text.contains("早上") || text.contains("早晨") || text.contains("清晨") || text.contains("明早") || text.contains("今早") {
+                hour = 8
+            } else if text.contains("上午") {
                 hour = 9
             } else if text.contains("下午") {
                 hour = 14
-            } else if text.contains("晚上") {
+            } else if text.contains("傍晚") {
+                hour = 18
+            } else if text.contains("晚上") || text.contains("今晚") || text.contains("明晚") {
                 hour = 19
             } else if text.contains("中午") {
                 hour = 12
@@ -487,23 +504,65 @@ class NLPAnalyzer {
             // 3. 如果找到了具体时间点，检查是否需要转换（下午的时间需要 +12）
             if text.contains("下午") && hour! < 12 {
                 hour! += 12
-            } else if text.contains("晚上") && hour! < 12 {
+            } else if (text.contains("晚上") || text.contains("今晚") || text.contains("明晚")) && hour! < 12 {
+                hour! += 12
+            } else if text.contains("中午") && hour! < 11 {
                 hour! += 12
             }
         }
         
         // 4. 解析分钟
-        if text.contains("半") {
-            minute = 30
-        } else if text.contains("一刻") {
-            minute = 15
-        } else if text.contains("三刻") {
-            minute = 45
+        if minute == 0 {
+            if text.contains("半") {
+                minute = 30
+            } else if text.contains("一刻") {
+                minute = 15
+            } else if text.contains("三刻") {
+                minute = 45
+            }
         }
         
         components.hour = hour
         components.minute = minute
         
         return calendar.date(from: components)
+    }
+    
+    private func extractDigitalTime(from text: String) -> (hour: Int, minute: Int)? {
+        // 1) HH:mm / HH：mm
+        let colonPattern = #"([01]?\d|2[0-3])[:：]([0-5]\d)"#
+        if let regex = try? NSRegularExpression(pattern: colonPattern),
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let hourRange = Range(match.range(at: 1), in: text),
+           let minuteRange = Range(match.range(at: 2), in: text),
+           let hour = Int(text[hourRange]),
+           let minute = Int(text[minuteRange]) {
+            return (hour, minute)
+        }
+        
+        // 2) H点 / H时 / H点M分
+        let hmPattern = #"(\d{1,2})\s*[点时](\d{1,2})?\s*分?"#
+        if let regex = try? NSRegularExpression(pattern: hmPattern),
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let hourRange = Range(match.range(at: 1), in: text),
+           let hour = Int(text[hourRange]),
+           hour >= 0, hour <= 23 {
+            
+            var minute = 0
+            if let minuteRange = Range(match.range(at: 2), in: text),
+               let parsedMinute = Int(text[minuteRange]),
+               parsedMinute >= 0, parsedMinute <= 59 {
+                minute = parsedMinute
+            } else if text.contains("半") {
+                minute = 30
+            } else if text.contains("一刻") {
+                minute = 15
+            } else if text.contains("三刻") {
+                minute = 45
+            }
+            return (hour, minute)
+        }
+        
+        return nil
     }
 }

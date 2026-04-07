@@ -38,16 +38,45 @@ struct Note: Identifiable {
     var todos: [TodoItem] = []
 }
 
+struct ReviewTodoItem: Identifiable {
+    let id: UUID
+    var isSelected: Bool
+    var text: String
+    var hasDueDate: Bool
+    var dueDate: Date
+    
+    init(todo: TodoItem) {
+        id = todo.id
+        isSelected = true
+        text = todo.text
+        hasDueDate = todo.dueDate != nil
+        dueDate = todo.dueDate ?? Date()
+    }
+    
+    func toTodoItem() -> TodoItem? {
+        let cleanedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isSelected, !cleanedText.isEmpty else { return nil }
+        
+        return TodoItem(
+            id: id,
+            text: cleanedText,
+            dueDate: hasDueDate ? dueDate : nil
+        )
+    }
+}
+
 // MARK: - ViewModel（内存 + Core Data 持久化）
 
 @MainActor
 class NotesViewModel: ObservableObject {
     private let nlpAnalyzer = NLPAnalyzer()
     private let context: NSManagedObjectContext
+    private var noteObjectIDs: [UUID: NSManagedObjectID] = [:]
     
     @Published var currentText: String = ""
     @Published var notes: [Note] = []
     @Published var isLoading: Bool = true
+    @Published var pendingTodoReviewNoteID: UUID?
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -61,8 +90,35 @@ class NotesViewModel: ObservableObject {
         var note = Note(text: currentText)
         analyze(&note)
         notes.insert(note, at: 0)
-        saveToCoreData(note: note)
+        if let objectID = saveToCoreData(note: note) {
+            noteObjectIDs[note.id] = objectID
+            if !note.todos.isEmpty {
+                replaceTodosInCoreData(noteId: note.id, todos: note.todos)
+                pendingTodoReviewNoteID = note.id
+            }
+        }
         currentText = ""
+    }
+    
+    var pendingTodoReviewNote: Note? {
+        guard let noteId = pendingTodoReviewNoteID else { return nil }
+        return notes.first(where: { $0.id == noteId })
+    }
+    
+    func dismissTodoReview() {
+        pendingTodoReviewNoteID = nil
+    }
+    
+    func applyTodoReview(_ reviewedTodos: [TodoItem]) {
+        guard let noteId = pendingTodoReviewNoteID,
+              let noteIndex = notes.firstIndex(where: { $0.id == noteId }) else {
+            pendingTodoReviewNoteID = nil
+            return
+        }
+        
+        notes[noteIndex].todos = reviewedTodos
+        replaceTodosInCoreData(noteId: noteId, todos: reviewedTodos)
+        pendingTodoReviewNoteID = nil
     }
     
     func updateNote(noteId: UUID, newText: String) {
@@ -78,7 +134,11 @@ class NotesViewModel: ObservableObject {
         updatedNote.id = notes[noteIndex].id
         analyze(&updatedNote)
         
+        let oldText = notes[noteIndex].text
+        let oldCreatedAt = notes[noteIndex].createdAt
+        
         notes[noteIndex] = updatedNote
+        saveUpdatedNoteToCoreData(noteId: noteId, newText: newText, oldText: oldText, createdAt: oldCreatedAt)
     }
     
     func deleteNote(noteId: UUID) {
@@ -103,30 +163,36 @@ class NotesViewModel: ObservableObject {
         notes.remove(at: noteIndex)
         
         // 4. 从 Core Data 中删除笔记（使用保存的信息匹配）
-        deleteNoteFromCoreData(text: noteText, createdAt: noteCreatedAt)
+        deleteNoteFromCoreData(noteId: noteId, text: noteText, createdAt: noteCreatedAt)
     }
     
-    private func deleteNoteFromCoreData(text: String, createdAt: Date) {
-        let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
-        
+    private func deleteNoteFromCoreData(noteId: UUID, text: String, createdAt: Date) {
         do {
-            let results = try context.fetch(request)
-            for obj in results {
-                if let objText = obj.value(forKey: "text") as? String,
-                   let objCreatedAt = obj.value(forKey: "createdAt") as? Date,
-                   objText == text,
-                   abs(objCreatedAt.timeIntervalSince(createdAt)) < 1.0 {  // 时间差小于 1 秒认为是同一条
-                    
-                    // 先删除对应的待办
-                    deleteTodosFromCoreData(noteId: obj.objectID)
-                    
-                    // 再删除笔记
-                    context.delete(obj)
-                    break
+            if let objectID = noteObjectIDs[noteId],
+               let obj = try? context.existingObject(with: objectID) as? NSManagedObject {
+                deleteTodosFromCoreData(noteId: objectID)
+                context.delete(obj)
+            } else {
+                let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
+                let results = try context.fetch(request)
+                for obj in results {
+                    if let objText = obj.value(forKey: "text") as? String,
+                       let objCreatedAt = obj.value(forKey: "createdAt") as? Date,
+                       objText == text,
+                       abs(objCreatedAt.timeIntervalSince(createdAt)) < 1.0 {  // 时间差小于 1 秒认为是同一条
+                        
+                        // 先删除对应的待办
+                        deleteTodosFromCoreData(noteId: obj.objectID)
+                        
+                        // 再删除笔记
+                        context.delete(obj)
+                        break
+                    }
                 }
             }
             
             try context.save()
+            noteObjectIDs.removeValue(forKey: noteId)
             NSLog("笔记删除成功")
         } catch {
             NSLog("删除笔记失败: \(error)")
@@ -158,6 +224,7 @@ class NotesViewModel: ObservableObject {
         }
         
         notes[noteIndex].todos[todoIndex].isDone.toggle()
+        saveTodoToCoreData(todo: notes[noteIndex].todos[todoIndex], noteId: noteId)
     }
     
     ///更新待办的到期时间
@@ -184,58 +251,62 @@ class NotesViewModel: ObservableObject {
         
         notes.insert(tempNote, at: 0)
         
-        saveToCoreData(note: tempNote)
+        if let objectID = saveToCoreData(note: tempNote) {
+            noteObjectIDs[tempNote.id] = objectID
+            replaceTodosInCoreData(noteId: tempNote.id, todos: tempNote.todos)
+        }
+    }
+    
+    private func replaceTodosInCoreData(noteId: UUID, todos: [TodoItem]) {
+        guard let noteObjectID = noteObjectIDs[noteId] else {
+            NSLog("未找到 noteId 对应的 Core Data 对象，无法批量更新待办")
+            return
+        }
+        
+        deleteTodosFromCoreData(noteId: noteObjectID)
+        
+        for todo in todos {
+            saveTodoToCoreData(todo: todo, noteId: noteId)
+        }
     }
     
     private func saveTodoToCoreData(todo: TodoItem, noteId: UUID) {
-        // 1. 找到对应的笔记在 Core Data 中的记录
-        let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
+        guard let noteObjectID = noteObjectIDs[noteId] else {
+            NSLog("未找到 noteId 对应的 Core Data 对象，无法保存待办")
+            return
+        }
+        
+        let noteIdString = noteObjectID.uriRepresentation().absoluteString
         
         do {
-            let results = try context.fetch(request)
+            // 查找或创建待办记录
+            let todoRequest = NSFetchRequest<NSManagedObject>(entityName: "TodoEntity")
+            todoRequest.predicate = NSPredicate(format: "todoId == %@ AND noteId == %@", todo.id.uuidString, noteIdString)
             
-            // 通过笔记 ID 匹配（通过笔记内容匹配）
-            for noteObj in results {
-                if let noteText = noteObj.value(forKey: "text") as? String,
-                   let note = notes.first(where: { $0.id == noteId && $0.text == noteText }) {
-                    
-                    let noteIdString = noteObj.objectID.uriRepresentation().absoluteString
-                    
-                    // 2. 查找或创建待办记录
-                    let todoRequest = NSFetchRequest<NSManagedObject>(entityName: "TodoEntity")
-                    todoRequest.predicate = NSPredicate(format: "todoId == %@ AND noteId == %@", todo.id.uuidString, noteIdString)
-                    
-                    let todoResults = try context.fetch(todoRequest)
-                    let todoObj: NSManagedObject
-                    
-                    if let existing = todoResults.first {
-                        // 更新已存在的待办
-                        todoObj = existing
-                    } else {
-                        // 创建新的待办记录
-                        guard let entity = NSEntityDescription.entity(forEntityName: "TodoEntity", in: context) else {
-                            NSLog("找不到 TodoEntity 定义")
-                            return
-                        }
-                        todoObj = NSManagedObject(entity: entity, insertInto: context)
-                        todoObj.setValue(todo.id.uuidString, forKey: "todoId")
-                        todoObj.setValue(noteIdString, forKey: "noteId")
-                    }
-                    
-                    // 3. 更新待办属性
-                    todoObj.setValue(todo.text, forKey: "text")
-                    todoObj.setValue(todo.dueDate, forKey: "dueDate")
-                    todoObj.setValue(todo.isDone, forKey: "isDone")
-                    todoObj.setValue(todo.reminderScheduled, forKey: "reminderScheduled")
-                    
-                    // 4. 保存
-                    try context.save()
-                    NSLog("待办时间更新成功")
+            let todoResults = try context.fetch(todoRequest)
+            let todoObj: NSManagedObject
+            
+            if let existing = todoResults.first {
+                todoObj = existing
+            } else {
+                guard let entity = NSEntityDescription.entity(forEntityName: "TodoEntity", in: context) else {
+                    NSLog("找不到 TodoEntity 定义")
                     return
                 }
+                todoObj = NSManagedObject(entity: entity, insertInto: context)
+                todoObj.setValue(todo.id.uuidString, forKey: "todoId")
+                todoObj.setValue(noteIdString, forKey: "noteId")
             }
             
-            NSLog("未找到对应的笔记记录")
+            // 更新待办属性
+            todoObj.setValue(todo.text, forKey: "text")
+            todoObj.setValue(todo.dueDate, forKey: "dueDate")
+            todoObj.setValue(todo.isDone, forKey: "isDone")
+            todoObj.setValue(todo.reminderScheduled, forKey: "reminderScheduled")
+            
+            // 保存
+            try context.save()
+            NSLog("待办更新成功")
         } catch {
             NSLog("保存待办到 Core Data 失败: \(error)")
         }
@@ -314,6 +385,7 @@ class NotesViewModel: ObservableObject {
             if let noteIndex = notes.firstIndex(where: {$0.id == note.id}),
                let todoIndex = notes[noteIndex].todos.firstIndex(where: {$0.id == todo.id}) {
                 notes[noteIndex].todos[todoIndex].reminderScheduled = true
+                saveTodoToCoreData(todo: notes[noteIndex].todos[todoIndex], noteId: notes[noteIndex].id)
             }
             NSLog("提醒设置成功，将在 \(formatter.string(from: reminderDate)) 提醒")
         } catch {
@@ -330,6 +402,7 @@ class NotesViewModel: ObservableObject {
         for noteIndex in notes.indices {
             if let todoIndex = notes[noteIndex].todos.firstIndex(where: { $0.id == todoId }) {
                 notes[noteIndex].todos[todoIndex].reminderScheduled = false
+                saveTodoToCoreData(todo: notes[noteIndex].todos[todoIndex], noteId: notes[noteIndex].id)
                 break
             }
         }
@@ -351,9 +424,9 @@ class NotesViewModel: ObservableObject {
         
         if result.keywords.isEmpty {
             note.keywords = extractKeywords(from: note.text)
-            note.summary = makeSummary(from: note.text)
-            note.sentiment = detectSentiment(from: note.text)
-            note.todos = extractTodos(from: note.text)
+            note.summary = result.summary.isEmpty ? makeSummary(from: note.text) : result.summary
+            note.sentiment = result.sentiment
+            note.todos = result.todos.isEmpty ? extractTodos(from: note.text) : result.todos
         } else {
             note.keywords = result.keywords
             note.summary = result.summary
@@ -402,13 +475,29 @@ class NotesViewModel: ObservableObject {
     /// 极简 “NLP”：识别类似 “明天提交报告”、“周五开会” 这样的任务短语
     private func extractTodos(from text: String) -> [TodoItem] {
         var todos: [TodoItem] = []
-        let patterns = ["明天", "今天", "后天", "周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        let timePatterns = [
+            "今天", "明天", "后天", "大后天", "周一", "周二", "周三", "周四", "周五", "周六", "周日",
+            "下周", "早上", "早晨", "清晨", "上午", "下午", "傍晚", "晚上", "中午", "凌晨", "今晚", "明早", "明晚",
+            "点", "时", "分", "刻"
+        ]
+        let actionPatterns = [
+            "买", "购买", "采购", "提交", "完成", "开会", "讨论", "准备", "检查", "审核", "修改", "发送",
+            "回复", "处理", "安排", "计划", "制定", "执行", "实施", "落实", "汇报", "报告", "总结", "分析",
+            "研究", "学习", "复习", "练习", "联系", "沟通", "提醒", "取", "拿", "寄", "送", "缴费", "付款",
+            "支付", "预约", "看病", "就诊", "取药"
+        ]
         let sentences = text.split(whereSeparator: { "\n。.!！?？".contains($0) })
         
         for sentenceSub in sentences {
-            let sentence = String(sentenceSub)
-            if patterns.contains(where: { sentence.contains($0) }) {
-                todos.append(TodoItem(text: sentence, dueDate: nil))
+            let sentence = String(sentenceSub).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !sentence.isEmpty else { continue }
+            
+            let hasTimeWord = timePatterns.contains(where: { sentence.contains($0) })
+            let hasActionWord = actionPatterns.contains(where: { sentence.contains($0) })
+            
+            if hasTimeWord && hasActionWord {
+                let dueDate = nlpAnalyzer.inferDueDate(from: sentence)
+                todos.append(TodoItem(text: sentence, dueDate: dueDate))
             }
         }
         return todos
@@ -419,6 +508,7 @@ class NotesViewModel: ObservableObject {
     private func loadNotes() async{
         isLoading = true
         try? await Task.sleep(nanoseconds: 1000_000_000)  // 1 秒
+        noteObjectIDs.removeAll()
         
         let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
@@ -439,6 +529,7 @@ class NotesViewModel: ObservableObject {
                 loadTodosFromCoreData(for: &note, noteObjectID: obj.objectID)
                 
                 loaded.append(note)
+                noteObjectIDs[note.id] = obj.objectID
             }
             self.notes = loaded
         } catch {
@@ -468,14 +559,13 @@ class NotesViewModel: ObservableObject {
                 let isDone = obj.value(forKey: "isDone") as? Bool ?? false
                 let reminderScheduled = obj.value(forKey: "reminderScheduled") as? Bool ?? false
                 
-                var todo = TodoItem(id: todoId, text: text, dueDate: dueDate, isDone: isDone, reminderScheduled: reminderScheduled)
+                let todo = TodoItem(id: todoId, text: text, dueDate: dueDate, isDone: isDone, reminderScheduled: reminderScheduled)
                 savedTodos.append(todo)
             }
             
             // 合并已保存的待办和 NLP 分析出的待办
-            // 优先使用已保存的待办（如果 ID 匹配），否则使用 NLP 分析出的待办
-            let savedTodoIds = Set(savedTodos.map { $0.id })
-            let newTodos = note.todos.filter { !savedTodoIds.contains($0.id) }
+            let savedTodoKeys = Set(savedTodos.map(todoMergeKey))
+            let newTodos = note.todos.filter { !savedTodoKeys.contains(todoMergeKey($0)) }
             
             // 合并：已保存的待办 + 新分析出的待办
             note.todos = savedTodos + newTodos
@@ -484,10 +574,46 @@ class NotesViewModel: ObservableObject {
         }
     }
     
-    private func saveToCoreData(note: Note) {
+    private func todoMergeKey(_ todo: TodoItem) -> String {
+        let normalizedText = todo.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let dueDateTimestamp = todo.dueDate.map { String(Int($0.timeIntervalSince1970)) } ?? "nil"
+        return "\(normalizedText)|\(dueDateTimestamp)"
+    }
+    
+    private func saveUpdatedNoteToCoreData(noteId: UUID, newText: String, oldText: String, createdAt: Date) {
+        do {
+            if let objectID = noteObjectIDs[noteId],
+               let obj = try? context.existingObject(with: objectID) as? NSManagedObject {
+                obj.setValue(newText, forKey: "text")
+                try context.save()
+                return
+            }
+            
+            // 回退策略：如果映射缺失，则按旧文本 + 创建时间匹配
+            let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
+            let results = try context.fetch(request)
+            for obj in results {
+                if let objText = obj.value(forKey: "text") as? String,
+                   let objCreatedAt = obj.value(forKey: "createdAt") as? Date,
+                   objText == oldText,
+                   abs(objCreatedAt.timeIntervalSince(createdAt)) < 1.0 {
+                    obj.setValue(newText, forKey: "text")
+                    try context.save()
+                    return
+                }
+            }
+            
+            NSLog("更新笔记失败：未找到对应 Core Data 记录")
+        } catch {
+            NSLog("更新笔记到 Core Data 失败: \(error)")
+        }
+    }
+    
+    @discardableResult
+    private func saveToCoreData(note: Note) -> NSManagedObjectID? {
         guard let entity = NSEntityDescription.entity(forEntityName: "NoteEntity", in: context) else {
             print("找不到 NoteEntity 定义，请检查 Core Data 模型名称")
-            return
+            return nil
         }
         let obj = NSManagedObject(entity: entity, insertInto: context)
         obj.setValue(note.text, forKey: "text")
@@ -495,8 +621,10 @@ class NotesViewModel: ObservableObject {
         
         do {
             try context.save()
+            return obj.objectID
         } catch {
             print("保存笔记到 Core Data 失败: \(error)")
+            return nil
         }
     }
 }
@@ -691,6 +819,28 @@ struct NoteEditorPage: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
+        .sheet(
+            isPresented: Binding(
+                get: { vm.pendingTodoReviewNote != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        vm.dismissTodoReview()
+                    }
+                }
+            )
+        ) {
+            if let note = vm.pendingTodoReviewNote {
+                TodoReviewSheet(
+                    note: note,
+                    onConfirm: { reviewedTodos in
+                        vm.applyTodoReview(reviewedTodos)
+                    },
+                    onSkip: {
+                        vm.dismissTodoReview()
+                    }
+                )
+            }
+        }
 //        .navigationTitle("Relo")
 //        .navigationBarTitleDisplayMode(.large)
     }
@@ -708,6 +858,87 @@ struct NoteEditorPage: View {
         case .positive: return .green
         case .neutral: return .gray
         case .negative: return .red
+        }
+    }
+}
+
+struct TodoReviewSheet: View {
+    let note: Note
+    let onConfirm: ([TodoItem]) -> Void
+    let onSkip: () -> Void
+    
+    @Environment(\.dismiss) private var dismiss
+    @State private var reviewItems: [ReviewTodoItem]
+    
+    init(note: Note, onConfirm: @escaping ([TodoItem]) -> Void, onSkip: @escaping () -> Void) {
+        self.note = note
+        self.onConfirm = onConfirm
+        self.onSkip = onSkip
+        _reviewItems = State(initialValue: note.todos.map(ReviewTodoItem.init))
+    }
+    
+    private var selectedCount: Int {
+        reviewItems.compactMap { $0.toTodoItem() }.count
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("识别结果") {
+                    Text("识别到 \(note.todos.count) 个待办，请确认保留的内容。")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(note.summary.isEmpty ? note.text : note.summary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                
+                Section("待确认待办") {
+                    ForEach($reviewItems) { $item in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Toggle("保留这条待办", isOn: $item.isSelected)
+                                .toggleStyle(.switch)
+                            
+                            TextField("待办内容", text: $item.text, axis: .vertical)
+                                .textFieldStyle(.roundedBorder)
+                                .disabled(!item.isSelected)
+                            
+                            Toggle("设置时间", isOn: $item.hasDueDate)
+                                .disabled(!item.isSelected)
+                            
+                            if item.isSelected && item.hasDueDate {
+                                DatePicker(
+                                    "待办时间",
+                                    selection: $item.dueDate,
+                                    displayedComponents: [.date, .hourAndMinute]
+                                )
+                                .datePickerStyle(.compact)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                    }
+                }
+            }
+            .navigationTitle("确认待办")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("稍后处理") {
+                        onSkip()
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成(\(selectedCount))") {
+                        let reviewedTodos = reviewItems.compactMap { $0.toTodoItem() }
+                        onConfirm(reviewedTodos)
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
         }
     }
 }
