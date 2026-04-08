@@ -1,0 +1,179 @@
+{
+  "" : {
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Relo-primary.dia",
+    "emit-module-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Relo-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Relo-primary-emit-module.dia",
+    "pch" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Relo-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Relo-primary.swiftdeps"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/CoreDataGenerated/ReloModel/NoteEntity+CoreDataClass.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/CoreDataGenerated/ReloModel/NoteEntity+CoreDataProperties.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteEntity+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/CoreDataGenerated/ReloModel/ReloModel+CoreDataModel.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloModel+CoreDataModel~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/CoreDataGenerated/ReloModel/TodoEntity+CoreDataClass.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/CoreDataGenerated/ReloModel/TodoEntity+CoreDataProperties.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoEntity+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NLPContents/NLPAnalyzer.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NLPAnalyzer~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesContent/ContentView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesList/NoteDetailView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NoteDetailView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesList/NotesListView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/NotesListView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesSetting/SettingView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/SettingView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/Persistence.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/Persistence~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/ReloApp.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/ReloApp~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/RlLodingView/LoadingView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/LoadingView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/RlToolHelper/DateHelper.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/DateHelper~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/TodoList/AddTodoView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/AddTodoView~partial.swiftmodule"
+  },
+  "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/TodoList/TodoListView.swift" : {
+    "const-values" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.swiftconstvalues",
+    "dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.d",
+    "diagnostics" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.dia",
+    "index-unit-output-path" : "/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.o",
+    "llvm-bc" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.bc",
+    "object" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.o",
+    "swift-dependencies" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView.swiftdeps",
+    "swiftmodule" : "/Users/bytedance/Desktop/code/personal_code/Relo/DerivedData/Build/Intermediates.noindex/Relo.build/Debug-iphoneos/Relo.build/Objects-normal/arm64/TodoListView~partial.swiftmodule"
+  }
+}

@@ -10,9 +10,13 @@ import SwiftUI
 struct NoteDetailView: View {
     let note: Note
     @ObservedObject var vm: NotesViewModel
-    @Environment(\.dismiss) private var dismiss
     
     @State private var editedText: String
+    @State private var savedText: String
+    @State private var savedTags: [String]
+    @State private var autoTagsPreview: [String]
+    @State private var selectedTags: Set<String>
+    @State private var customTagInput: String = ""
     @State private var isEditing: Bool = false
     @FocusState private var isTextEditorFocused: Bool
     
@@ -20,6 +24,10 @@ struct NoteDetailView: View {
         self.note = note
         self.vm = vm
         _editedText = State(initialValue: note.text)
+        _savedText = State(initialValue: note.text)
+        _savedTags = State(initialValue: note.tags)
+        _autoTagsPreview = State(initialValue: note.tags)
+        _selectedTags = State(initialValue: Set(note.tags))
     }
     
     var body: some View {
@@ -39,9 +47,87 @@ struct NoteDetailView: View {
                             .cornerRadius(12)
                             .focused($isTextEditorFocused)
                         
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("标签（推荐 + 自定义）")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            
+                            if !selectedTags.isEmpty {
+                                FlowLayout(spacing: 8) {
+                                    ForEach(finalSelectedTags(), id: \.self) { tag in
+                                        Button {
+                                            removeSelectedTag(tag)
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Text("#\(tag)")
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.caption2)
+                                            }
+                                            .font(.caption.weight(.medium))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.green.opacity(0.12))
+                                            .foregroundStyle(Color.green)
+                                            .cornerRadius(10)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                            
+                            HStack(spacing: 8) {
+                                TextField("添加自定义标签，回车确认", text: $customTagInput)
+                                    .textInputAutocapitalization(.never)
+                                    .disableAutocorrection(true)
+                                    .onSubmit {
+                                        addCustomTag()
+                                    }
+                                
+                                Button("添加") {
+                                    addCustomTag()
+                                }
+                                .font(.caption.weight(.semibold))
+                                .buttonStyle(.bordered)
+                                .disabled(normalizeTag(customTagInput).isEmpty)
+                            }
+                            
+                            if !autoTagsPreview.isEmpty {
+                                Text("智能推荐（点击选择/取消）")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                FlowLayout(spacing: 8) {
+                                    ForEach(autoTagsPreview, id: \.self) { tag in
+                                        let normalized = normalizeTag(tag)
+                                        let isSelected = selectedTags.contains(normalized)
+                                        
+                                        Button {
+                                            toggleSuggestedTag(tag)
+                                        } label: {
+                                            Text("#\(tag)")
+                                                .font(.caption.weight(.medium))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 6)
+                                                .background(isSelected ? Color.blue.opacity(0.18) : Color.gray.opacity(0.12))
+                                                .foregroundStyle(isSelected ? Color.blue : Color.secondary)
+                                                .cornerRadius(10)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            } else if selectedTags.isEmpty {
+                                Text("修改内容后会实时生成推荐标签")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        
                         HStack {
                             Button("取消") {
-                                editedText = note.text
+                                editedText = savedText
+                                selectedTags = Set(savedTags)
+                                customTagInput = ""
+                                refreshAutoTags(for: savedText)
                                 isEditing = false
                                 isTextEditorFocused = false
                             }
@@ -50,7 +136,10 @@ struct NoteDetailView: View {
                             Spacer()
                             
                             Button("保存") {
-                                vm.updateNote(noteId: note.id, newText: editedText)
+                                let finalTags = finalSelectedTags()
+                                savedText = editedText
+                                savedTags = finalTags
+                                vm.updateNote(noteId: note.id, newText: editedText, selectedTags: finalTags)
                                 isEditing = false
                                 isTextEditorFocused = false
                             }
@@ -59,10 +148,24 @@ struct NoteDetailView: View {
                         }
                     } else {
                         // 显示模式
-                        Text(note.text)
+                        Text(savedText)
                             .font(.body)
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
+                        
+                        if !savedTags.isEmpty {
+                            FlowLayout(spacing: 8) {
+                                ForEach(savedTags, id: \.self) { tag in
+                                    Text("#\(tag)")
+                                        .font(.caption.weight(.medium))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(Color.green.opacity(0.12))
+                                        .foregroundStyle(Color.green)
+                                        .cornerRadius(10)
+                                }
+                            }
+                        }
                     }
                 }
                 .padding()
@@ -85,44 +188,6 @@ struct NoteDetailView: View {
                             Text(note.summary)
                                 .font(.body)
                                 .foregroundStyle(.primary)
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemBackground))
-                        )
-                    }
-                    
-                    // 关键词
-                    if !note.keywords.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("关键词", systemImage: "tag")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                            
-                            FlowLayout(spacing: 8) {
-                                ForEach(note.keywords, id: \.self) { kw in
-                                    Text(kw)
-                                        .font(.caption)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.blue.opacity(0.15), .purple.opacity(0.15)],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.blue, .purple],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .cornerRadius(8)
-                                }
-                            }
                         }
                         .padding()
                         .background(
@@ -198,6 +263,9 @@ struct NoteDetailView: View {
                 if !isEditing {
                     Button {
                         isEditing = true
+                        selectedTags = Set(savedTags)
+                        customTagInput = ""
+                        refreshAutoTags(for: editedText)
                         isTextEditorFocused = true
                     } label: {
                         Label("编辑", systemImage: "pencil")
@@ -205,6 +273,75 @@ struct NoteDetailView: View {
                 }
             }
         }
+        .onAppear {
+            selectedTags = Set(savedTags)
+            refreshAutoTags(for: editedText)
+        }
+        .onChange(of: editedText) { _, newValue in
+            guard isEditing else { return }
+            refreshAutoTags(for: newValue)
+        }
+    }
+    
+    private func normalizeTag(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        let withoutPrefix = trimmed.hasPrefix("#") ? String(trimmed.dropFirst()) : trimmed
+        return withoutPrefix.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+    
+    private func refreshAutoTags(for text: String) {
+        autoTagsPreview = vm.suggestedTags(for: text)
+        selectedTags = Set(selectedTags.map { normalizeTag($0) }.filter { !$0.isEmpty })
+    }
+    
+    private func toggleSuggestedTag(_ tag: String) {
+        let normalized = normalizeTag(tag)
+        guard !normalized.isEmpty else { return }
+        if selectedTags.contains(normalized) {
+            selectedTags.remove(normalized)
+        } else {
+            selectedTags.insert(normalized)
+        }
+    }
+    
+    private func removeSelectedTag(_ tag: String) {
+        let normalized = normalizeTag(tag)
+        guard !normalized.isEmpty else { return }
+        selectedTags.remove(normalized)
+    }
+    
+    private func addCustomTag() {
+        let normalized = normalizeTag(customTagInput)
+        guard !normalized.isEmpty else { return }
+        selectedTags.insert(normalized)
+        customTagInput = ""
+    }
+    
+    private func finalSelectedTags() -> [String] {
+        var ordered: [String] = []
+        
+        for tag in autoTagsPreview {
+            let normalized = normalizeTag(tag)
+            guard !normalized.isEmpty else { continue }
+            if selectedTags.contains(normalized), !ordered.contains(normalized) {
+                ordered.append(normalized)
+            }
+        }
+        
+        for tag in savedTags {
+            let normalized = normalizeTag(tag)
+            guard !normalized.isEmpty else { continue }
+            if selectedTags.contains(normalized), !ordered.contains(normalized) {
+                ordered.append(normalized)
+            }
+        }
+        
+        for tag in selectedTags.sorted() where !ordered.contains(tag) {
+            ordered.append(tag)
+        }
+        
+        return ordered
     }
     
     private func sentimentIcon(for sentiment: Sentiment) -> String {
@@ -306,7 +443,7 @@ struct TodoDetailRowView: View {
     }
 }
 
-// MARK: - 简单的流式布局（用于关键词显示）
+// MARK: - 简单的流式布局（用于标签显示）
 
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8

@@ -1,0 +1,216 @@
+{
+  "source": "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesContent/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "记笔记",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 749
+        }
+      },
+      {
+        "comment": "",
+        "key": "笔记列表",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 757
+        }
+      },
+      {
+        "comment": "",
+        "key": "待办",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 765
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 773
+        }
+      },
+      {
+        "comment": "",
+        "key": "快速记一条笔记",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 820
+        }
+      },
+      {
+        "comment": "",
+        "key": "输入你的任务或想法...",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 831
+        }
+      },
+      {
+        "comment": "",
+        "key": "标签（推荐 + 自定义）",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 846
+        }
+      },
+      {
+        "comment": "",
+        "key": "智能推荐（点击选择/取消）",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 892
+        }
+      },
+      {
+        "comment": "",
+        "key": "输入内容后会实时生成推荐标签",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 918
+        }
+      },
+      {
+        "comment": "",
+        "key": "#%@",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 858
+        }
+      },
+      {
+        "comment": "",
+        "key": "添加自定义标签，回车确认",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 876
+        }
+      },
+      {
+        "comment": "",
+        "key": "添加",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 883
+        }
+      },
+      {
+        "comment": "",
+        "key": "#%@",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 905
+        }
+      },
+      {
+        "comment": "",
+        "key": "保存并智能分析",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 934
+        }
+      },
+      {
+        "comment": "",
+        "key": "最近的一条笔记",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 962
+        }
+      },
+      {
+        "comment": "",
+        "key": "#%@",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 975
+        }
+      },
+      {
+        "comment": "",
+        "key": "确认待办",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1182
+        }
+      },
+      {
+        "comment": "",
+        "key": "识别结果",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1145
+        }
+      },
+      {
+        "comment": "",
+        "key": "待确认待办",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1156
+        }
+      },
+      {
+        "comment": "",
+        "key": "识别到 %lld 个待办，请确认保留的内容。",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1146
+        }
+      },
+      {
+        "comment": "",
+        "key": "保留这条待办",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1159
+        }
+      },
+      {
+        "comment": "",
+        "key": "待办内容",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 1162
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置时间",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1166
+        }
+      },
+      {
+        "comment": "",
+        "key": "待办时间",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 1171
+        }
+      },
+      {
+        "comment": "",
+        "key": "稍后处理",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 1186
+        }
+      },
+      {
+        "comment": "",
+        "key": "完成(%lld)",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 1192
+        }
+      }
+    ]
+  },
+  "version": 1
+}

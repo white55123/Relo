@@ -149,7 +149,7 @@ struct AboutView: View {
                         FeatureRow(
                             icon: "text.magnifyingglass",
                             title: "智能文本分析",
-                            description: "基于 Core ML + Natural Language 框架，自动提取关键词和生成摘要"
+                            description: "基于 Core ML + Natural Language 框架，自动生成摘要并识别标签"
                         )
                         
                         FeatureRow(
@@ -228,4 +228,3 @@ struct FeatureRow: View {
         }
     }
 }
-

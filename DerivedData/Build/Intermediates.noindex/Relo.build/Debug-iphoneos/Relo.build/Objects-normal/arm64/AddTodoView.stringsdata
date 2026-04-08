@@ -1,0 +1,56 @@
+{
+  "source": "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/TodoList/AddTodoView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "添加待办",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "待办内容",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置时间",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "选择时间",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "添加待办",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "取消",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 90
+        }
+      }
+    ]
+  },
+  "version": 1
+}

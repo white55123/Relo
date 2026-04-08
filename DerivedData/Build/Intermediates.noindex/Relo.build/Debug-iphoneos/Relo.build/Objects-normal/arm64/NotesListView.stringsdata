@@ -1,0 +1,176 @@
+{
+  "source": "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/NotesList/NotesListView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "所有笔记",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "删除笔记",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "取消",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "删除",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 88
+        }
+      },
+      {
+        "comment": "",
+        "key": "删除笔记将同时删除对应笔记的 %lld 个待办，确定删除吗？",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "确定要删除这条笔记吗？",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "还没有任何笔记",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "无匹配结果",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "试试更短搜索词或清空筛选",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 126
+        }
+      },
+      {
+        "comment": "",
+        "key": "范围",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "搜索正文、摘要、标签、待办",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 139
+        }
+      },
+      {
+        "comment": "",
+        "key": "清空",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 207
+        }
+      },
+      {
+        "comment": "",
+        "key": "全部标签",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 167
+        }
+      },
+      {
+        "comment": "",
+        "key": "#%@",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "标签: %@",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 176
+        }
+      },
+      {
+        "comment": "",
+        "key": "标签: 全部",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 176
+        }
+      },
+      {
+        "comment": "",
+        "key": "笔记",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 230
+        }
+      },
+      {
+        "comment": "",
+        "key": "自动识别的待办",
+        "location": {
+          "startingColumn": 62,
+          "startingLine": 230
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 363
+        }
+      },
+      {
+        "comment": "",
+        "key": "还有 %lld 个待办...",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 289
+        }
+      },
+      {
+        "comment": "",
+        "key": "删除",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 311
+        }
+      }
+    ]
+  },
+  "version": 1
+}

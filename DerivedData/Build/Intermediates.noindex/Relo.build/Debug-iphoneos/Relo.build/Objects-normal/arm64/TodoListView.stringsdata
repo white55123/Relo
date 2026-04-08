@@ -1,0 +1,152 @@
+{
+  "source": "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/TodoList/TodoListView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "时间段",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "我的待办列表",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 106
+        }
+      },
+      {
+        "comment": "",
+        "key": "还没有待办事项",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "在笔记中添加包含时间的任务，\n会自动识别为待办事项",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 160
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置时间后可以设置提醒",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 364
+        }
+      },
+      {
+        "comment": "",
+        "key": "•",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 308
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置时间",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 325
+        }
+      },
+      {
+        "comment": "",
+        "key": "已设置提醒",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 348
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置提醒（提前1小时）",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 356
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置时间",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 420
+        }
+      },
+      {
+        "comment": "",
+        "key": "选择待办时间",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 405
+        }
+      },
+      {
+        "comment": "",
+        "key": "时间",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 410
+        }
+      },
+      {
+        "comment": "",
+        "key": "取消",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "确定",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 430
+        }
+      },
+      {
+        "comment": "",
+        "key": "--:--",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 537
+        }
+      },
+      {
+        "comment": "",
+        "key": "进行中",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 596
+        }
+      },
+      {
+        "comment": "",
+        "key": "已设置提醒",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 613
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置提醒",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 621
+        }
+      }
+    ]
+  },
+  "version": 1
+}

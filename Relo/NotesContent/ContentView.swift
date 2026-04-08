@@ -32,7 +32,7 @@ struct Note: Identifiable {
     var id = UUID()
     var text: String
     var createdAt: Date = Date()
-    var keywords: [String] = []
+    var tags: [String] = []
     var summary: String = ""
     var sentiment: Sentiment = .neutral
     var todos: [TodoItem] = []
@@ -60,7 +60,7 @@ struct ReviewTodoItem: Identifiable {
         return TodoItem(
             id: id,
             text: cleanedText,
-            dueDate: hasDueDate ? dueDate : nil
+            dueDate: hasDueDate ? dueDate : Date()
         )
     }
 }
@@ -85,10 +85,12 @@ class NotesViewModel: ObservableObject {
         }
     }
     
-    func addAndAnalyzeNote() {
+    func addAndAnalyzeNote(selectedTags: [String]? = nil) {
         guard !currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         var note = Note(text: currentText)
         analyze(&note)
+        let autoTags = generateAutoTags(from: note.text)
+        note.tags = normalizeTags(selectedTags ?? autoTags)
         notes.insert(note, at: 0)
         if let objectID = saveToCoreData(note: note) {
             noteObjectIDs[note.id] = objectID
@@ -121,7 +123,7 @@ class NotesViewModel: ObservableObject {
         pendingTodoReviewNoteID = nil
     }
     
-    func updateNote(noteId: UUID, newText: String) {
+    func updateNote(noteId: UUID, newText: String, selectedTags: [String]? = nil) {
         guard let noteIndex = notes.firstIndex(where: {$0.id == noteId}) else {
             return
         }
@@ -133,12 +135,14 @@ class NotesViewModel: ObservableObject {
         var updatedNote = Note(text: newText, createdAt: notes[noteIndex].createdAt)
         updatedNote.id = notes[noteIndex].id
         analyze(&updatedNote)
+        let autoTags = generateAutoTags(from: updatedNote.text)
+        updatedNote.tags = normalizeTags(selectedTags ?? autoTags)
         
         let oldText = notes[noteIndex].text
         let oldCreatedAt = notes[noteIndex].createdAt
         
         notes[noteIndex] = updatedNote
-        saveUpdatedNoteToCoreData(noteId: noteId, newText: newText, oldText: oldText, createdAt: oldCreatedAt)
+        saveUpdatedNoteToCoreData(noteId: noteId, newText: newText, newTags: updatedNote.tags, oldText: oldText, createdAt: oldCreatedAt)
     }
     
     func deleteNote(noteId: UUID) {
@@ -421,26 +425,9 @@ class NotesViewModel: ObservableObject {
     private func analyze(_ note: inout Note) {
         //使用nlp分析
         let result = nlpAnalyzer.analyze(text: note.text)
-        
-        if result.keywords.isEmpty {
-            note.keywords = extractKeywords(from: note.text)
-            note.summary = result.summary.isEmpty ? makeSummary(from: note.text) : result.summary
-            note.sentiment = result.sentiment
-            note.todos = result.todos.isEmpty ? extractTodos(from: note.text) : result.todos
-        } else {
-            note.keywords = result.keywords
-            note.summary = result.summary
-            note.sentiment = result.sentiment
-            note.todos = result.todos
-        }
-    }
-    
-    private func extractKeywords(from text: String) -> [String] {
-        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
-        let parts = text.components(separatedBy: separators)
-        let words = parts.filter { $0.count >= 2 }
-        let unique = Array(Set(words))
-        return Array(unique.prefix(5))
+        note.summary = result.summary.isEmpty ? makeSummary(from: note.text) : result.summary
+        note.sentiment = result.sentiment
+        note.todos = result.todos.isEmpty ? extractTodos(from: note.text) : result.todos
     }
     
     private func makeSummary(from text: String) -> String {
@@ -516,20 +503,30 @@ class NotesViewModel: ObservableObject {
         do {
             let results = try context.fetch(request)
             var loaded: [Note] = []
+            var shouldSaveTagMigration = false
             for obj in results {
                 guard
                     let text = obj.value(forKey: "text") as? String,
                     let createdAt = obj.value(forKey: "createdAt") as? Date
                 else { continue }
                 
-                var note = Note(text: text, createdAt: createdAt)
+                let tagsRaw = obj.value(forKey: "tags") as? String
+                var note = Note(text: text, createdAt: createdAt, tags: decodeTags(tagsRaw))
                 analyze(&note)
+                if note.tags.isEmpty {
+                    note.tags = generateAutoTags(from: note.text)
+                    obj.setValue(encodeTags(note.tags), forKey: "tags")
+                    shouldSaveTagMigration = true
+                }
                 
                 // 从 Core Data 加载已保存的待办数据
                 loadTodosFromCoreData(for: &note, noteObjectID: obj.objectID)
                 
                 loaded.append(note)
                 noteObjectIDs[note.id] = obj.objectID
+            }
+            if shouldSaveTagMigration {
+                try context.save()
             }
             self.notes = loaded
         } catch {
@@ -580,11 +577,12 @@ class NotesViewModel: ObservableObject {
         return "\(normalizedText)|\(dueDateTimestamp)"
     }
     
-    private func saveUpdatedNoteToCoreData(noteId: UUID, newText: String, oldText: String, createdAt: Date) {
+    private func saveUpdatedNoteToCoreData(noteId: UUID, newText: String, newTags: [String], oldText: String, createdAt: Date) {
         do {
             if let objectID = noteObjectIDs[noteId],
                let obj = try? context.existingObject(with: objectID) as? NSManagedObject {
                 obj.setValue(newText, forKey: "text")
+                obj.setValue(encodeTags(newTags), forKey: "tags")
                 try context.save()
                 return
             }
@@ -598,6 +596,7 @@ class NotesViewModel: ObservableObject {
                    objText == oldText,
                    abs(objCreatedAt.timeIntervalSince(createdAt)) < 1.0 {
                     obj.setValue(newText, forKey: "text")
+                    obj.setValue(encodeTags(newTags), forKey: "tags")
                     try context.save()
                     return
                 }
@@ -618,6 +617,7 @@ class NotesViewModel: ObservableObject {
         let obj = NSManagedObject(entity: entity, insertInto: context)
         obj.setValue(note.text, forKey: "text")
         obj.setValue(note.createdAt, forKey: "createdAt")
+        obj.setValue(encodeTags(note.tags), forKey: "tags")
         
         do {
             try context.save()
@@ -626,6 +626,104 @@ class NotesViewModel: ObservableObject {
             print("保存笔记到 Core Data 失败: \(error)")
             return nil
         }
+    }
+    
+    private func normalizeTags(_ tags: [String]) -> [String] {
+        var seen: Set<String> = []
+        var normalized: [String] = []
+        
+        for tag in tags {
+            let cleaned = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !cleaned.isEmpty, !seen.contains(cleaned) else { continue }
+            seen.insert(cleaned)
+            normalized.append(cleaned)
+        }
+        
+        return normalized
+    }
+    
+    private func encodeTags(_ tags: [String]) -> String? {
+        let normalized = normalizeTags(tags)
+        guard !normalized.isEmpty else { return nil }
+        guard let data = try? JSONEncoder().encode(normalized) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+    
+    private func decodeTags(_ raw: String?) -> [String] {
+        guard let raw, !raw.isEmpty else { return [] }
+        
+        if let data = raw.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode([String].self, from: data) {
+            return normalizeTags(decoded)
+        }
+        
+        // 兼容极端情况下的旧格式
+        let fallback = raw
+            .split(separator: ",")
+            .map { String($0) }
+        return normalizeTags(fallback)
+    }
+    
+    func suggestedTags(for text: String) -> [String] {
+        generateAutoTags(from: text)
+    }
+    
+    private func generateAutoTags(from text: String) -> [String] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        
+        var candidates: [String] = []
+        candidates.append(contentsOf: extractTagCandidates(from: trimmed))
+        
+        // 补充时间/场景标签，让实时输入的标签更符合直觉
+        candidates.append(contentsOf: extractContextualTags(from: trimmed))
+        return Array(normalizeTags(candidates).prefix(6))
+    }
+    
+    private func extractTagCandidates(from text: String) -> [String] {
+        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        let parts = text.components(separatedBy: separators)
+        let words = parts.filter { $0.count >= 2 }
+        let unique = Array(Set(words))
+        return Array(unique.prefix(8))
+    }
+    
+    private func extractContextualTags(from text: String) -> [String] {
+        var tags: [String] = []
+        
+        let timeWords = [
+            "今天", "明天", "后天", "大后天", "今晚", "明早", "明晚",
+            "周一", "周二", "周三", "周四", "周五", "周六", "周日", "下周"
+        ]
+        let periodWords = ["早上", "上午", "中午", "下午", "傍晚", "晚上", "凌晨"]
+        let actionWords = [
+            "买", "购买", "采购", "开会", "会议", "提交", "汇报", "学习",
+            "复习", "锻炼", "运动", "就诊", "看病", "出差", "旅行", "沟通"
+        ]
+        
+        for word in timeWords where text.contains(word) {
+            tags.append(word)
+        }
+        
+        for word in periodWords where text.contains(word) {
+            tags.append(word)
+        }
+        
+        for word in actionWords where text.contains(word) {
+            tags.append(word)
+        }
+        
+        if text.contains("早餐") {
+            tags.append("早餐")
+        }
+        if text.contains("午餐") {
+            tags.append("午餐")
+        }
+        if text.contains("晚餐") {
+            tags.append("晚餐")
+        }
+        
+        return tags
     }
 }
 
@@ -686,6 +784,9 @@ struct ContentView: View {
 struct NoteEditorPage: View {
     @ObservedObject var vm: NotesViewModel
     @FocusState private var isTextEditorFocused: Bool
+    @State private var autoTagsPreview: [String] = []
+    @State private var selectedTags: Set<String> = []
+    @State private var customTagInput: String = ""
     
     var body: some View {
         ZStack {
@@ -740,10 +841,92 @@ struct NoteEditorPage: View {
                                 .focused($isTextEditorFocused)
                         }
                         .frame(minHeight: 200)
+                        
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("标签（推荐 + 自定义）")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            
+                            if !selectedTags.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(finalSelectedTags(), id: \.self) { tag in
+                                            Button {
+                                                removeSelectedTag(tag)
+                                            } label: {
+                                                HStack(spacing: 4) {
+                                                    Text("#\(tag)")
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .font(.caption2)
+                                                }
+                                                .font(.caption.weight(.medium))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.green.opacity(0.12))
+                                            .foregroundStyle(Color.green)
+                                            .cornerRadius(10)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            HStack(spacing: 8) {
+                                TextField("添加自定义标签，回车确认", text: $customTagInput)
+                                    .textInputAutocapitalization(.never)
+                                    .disableAutocorrection(true)
+                                    .onSubmit {
+                                        addCustomTag()
+                                    }
+                                
+                                Button("添加") {
+                                    addCustomTag()
+                                }
+                                .font(.caption.weight(.semibold))
+                                .buttonStyle(.bordered)
+                                .disabled(normalizeTag(customTagInput).isEmpty)
+                            }
+                            
+                            if !autoTagsPreview.isEmpty {
+                                Text("智能推荐（点击选择/取消）")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(autoTagsPreview, id: \.self) { tag in
+                                            let normalized = normalizeTag(tag)
+                                            let isSelected = selectedTags.contains(normalized)
+                                            
+                                            Button {
+                                                toggleSuggestedTag(tag)
+                                            } label: {
+                                                Text("#\(tag)")
+                                                    .font(.caption.weight(.medium))
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 6)
+                                                    .background(isSelected ? Color.blue.opacity(0.18) : Color.gray.opacity(0.12))
+                                                    .foregroundStyle(isSelected ? Color.blue : Color.secondary)
+                                                    .cornerRadius(10)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            } else if selectedTags.isEmpty {
+                                Text("输入内容后会实时生成推荐标签")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
             
                         Button {
                             isTextEditorFocused = false
-                            vm.addAndAnalyzeNote()
+                            vm.addAndAnalyzeNote(selectedTags: finalSelectedTags())
+                            autoTagsPreview = []
+                            selectedTags.removeAll()
+                            customTagInput = ""
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "sparkles")
@@ -784,6 +967,22 @@ struct NoteEditorPage: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
+                            
+                            if !last.tags.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(last.tags, id: \.self) { tag in
+                                            Text("#\(tag)")
+                                                .font(.caption2.weight(.medium))
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color.green.opacity(0.12))
+                                                .foregroundStyle(Color.green)
+                                                .cornerRadius(8)
+                                        }
+                                    }
+                                }
+                            }
                             
                             HStack {
                                 HStack(spacing: 4) {
@@ -841,8 +1040,67 @@ struct NoteEditorPage: View {
                 )
             }
         }
+        .onAppear {
+            refreshAutoTags(for: vm.currentText)
+        }
+        .onChange(of: vm.currentText) { _, newValue in
+            refreshAutoTags(for: newValue)
+        }
 //        .navigationTitle("Relo")
 //        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private func normalizeTag(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        let withoutPrefix = trimmed.hasPrefix("#") ? String(trimmed.dropFirst()) : trimmed
+        return withoutPrefix.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+    
+    private func refreshAutoTags(for text: String) {
+        autoTagsPreview = vm.suggestedTags(for: text)
+        selectedTags = Set(selectedTags.map { normalizeTag($0) }.filter { !$0.isEmpty })
+    }
+    
+    private func toggleSuggestedTag(_ tag: String) {
+        let normalized = normalizeTag(tag)
+        guard !normalized.isEmpty else { return }
+        if selectedTags.contains(normalized) {
+            selectedTags.remove(normalized)
+        } else {
+            selectedTags.insert(normalized)
+        }
+    }
+    
+    private func removeSelectedTag(_ tag: String) {
+        let normalized = normalizeTag(tag)
+        guard !normalized.isEmpty else { return }
+        selectedTags.remove(normalized)
+    }
+    
+    private func addCustomTag() {
+        let normalized = normalizeTag(customTagInput)
+        guard !normalized.isEmpty else { return }
+        selectedTags.insert(normalized)
+        customTagInput = ""
+    }
+    
+    private func finalSelectedTags() -> [String] {
+        var ordered: [String] = []
+        
+        for tag in autoTagsPreview {
+            let normalized = normalizeTag(tag)
+            guard !normalized.isEmpty else { continue }
+            if selectedTags.contains(normalized), !ordered.contains(normalized) {
+                ordered.append(normalized)
+            }
+        }
+        
+        for tag in selectedTags.sorted() where !ordered.contains(tag) {
+            ordered.append(tag)
+        }
+        
+        return ordered
     }
     
     private func sentimentIcon(for sentiment: Sentiment) -> String {

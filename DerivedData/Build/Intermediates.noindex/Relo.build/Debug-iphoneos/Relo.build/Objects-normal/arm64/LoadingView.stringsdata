@@ -1,0 +1,24 @@
+{
+  "source": "/Users/bytedance/Desktop/code/personal_code/Relo/Relo/RlLodingView/LoadingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Relo",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI 智能日程管理助手",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 64
+        }
+      }
+    ]
+  },
+  "version": 1
+}
