@@ -35,14 +35,27 @@ class NotesViewModel: ObservableObject {
         
         // Background thread for NLP
         Task.detached {
+            let autoSentiment = UserDefaults.standard.bool(forKey: "enableAutoSentiment")
+            let autoTodo = UserDefaults.standard.bool(forKey: "enableAutoTodoExtraction")
+            
             var analyzingNote = note
             // run analysis in background
             let result = self.nlpAnalyzer.analyze(text: analyzingNote.text)
             
             await MainActor.run {
-                analyzingNote.summary = result.summary.isEmpty ? self.makeSummary(from: analyzingNote.text) : result.summary
-                analyzingNote.sentiment = result.sentiment
-                analyzingNote.todos = result.todos.isEmpty ? self.extractTodos(from: analyzingNote.text) : result.todos
+                if autoSentiment {
+                    analyzingNote.summary = result.summary.isEmpty ? self.makeSummary(from: analyzingNote.text) : result.summary
+                    analyzingNote.sentiment = result.sentiment
+                } else {
+                    analyzingNote.summary = self.makeSummary(from: analyzingNote.text)
+                    analyzingNote.sentiment = .neutral
+                }
+                
+                if autoTodo {
+                    analyzingNote.todos = result.todos.isEmpty ? self.extractTodos(from: analyzingNote.text) : result.todos
+                } else {
+                    analyzingNote.todos = []
+                }
                 
                 self.notes.insert(analyzingNote, at: 0)
                 
@@ -97,11 +110,25 @@ class NotesViewModel: ObservableObject {
         updatedNote.tags = normalizeTags(selectedTags ?? autoTags)
         
         Task.detached {
+            let autoSentiment = UserDefaults.standard.bool(forKey: "enableAutoSentiment")
+            let autoTodo = UserDefaults.standard.bool(forKey: "enableAutoTodoExtraction")
+            
             let result = self.nlpAnalyzer.analyze(text: updatedNote.text)
+            
             await MainActor.run {
-                updatedNote.summary = result.summary.isEmpty ? self.makeSummary(from: updatedNote.text) : result.summary
-                updatedNote.sentiment = result.sentiment
-                updatedNote.todos = result.todos.isEmpty ? self.extractTodos(from: updatedNote.text) : result.todos
+                if autoSentiment {
+                    updatedNote.summary = result.summary.isEmpty ? self.makeSummary(from: updatedNote.text) : result.summary
+                    updatedNote.sentiment = result.sentiment
+                } else {
+                    updatedNote.summary = self.makeSummary(from: updatedNote.text)
+                    updatedNote.sentiment = .neutral
+                }
+                
+                if autoTodo {
+                    updatedNote.todos = result.todos.isEmpty ? self.extractTodos(from: updatedNote.text) : result.todos
+                } else {
+                    updatedNote.todos = []
+                }
                 
                 self.notes[noteIndex] = updatedNote
                 if let objectID = self.noteObjectIDs[noteId] {
@@ -136,6 +163,21 @@ class NotesViewModel: ObservableObject {
     }
     
 
+    
+    func deleteAllNotes() {
+        if coreDataManager.deleteAllData() {
+            // 清空内存数据
+            self.notes.removeAll()
+            self.noteObjectIDs.removeAll()
+            
+            // 取消所有本地通知
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            
+            NSLog("所有数据已清空")
+        } else {
+            NSLog("清空数据失败")
+        }
+    }
     
     //MARK: - 代办操作
     ///切换待办的完成状态
@@ -480,7 +522,7 @@ struct ContentView: View {
                     
                     NavigationStack {
                         // 设置页
-                        SettingView()
+                        SettingView(vm: vm)
                     }
                     .tabItem {
                         Label("设置", systemImage: "gearshape")

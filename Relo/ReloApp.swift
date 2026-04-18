@@ -13,6 +13,15 @@ import UserNotifications
 struct ReloApp: App {
     let persistenceController = PersistenceController.shared
     
+    init() {
+        // 设置 UserDefaults 默认值
+        let defaults: [String: Any] = [
+            "enableAutoSentiment": true,
+            "enableAutoTodoExtraction": true
+        ]
+        UserDefaults.standard.register(defaults: defaults)
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView(context: persistenceController.container.viewContext)

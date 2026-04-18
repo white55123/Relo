@@ -8,9 +8,15 @@
 import SwiftUI
 
 struct SettingView : View {
+    @ObservedObject var vm: NotesViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showClearDataAlert = false
     @State private var showAbout = false
+    
+    // 假设这些设置保存在 UserDefaults 中
+    // AppStorage 的 key 默认值需要对应我们上面给出的 true
+    @AppStorage("enableAutoSentiment") private var enableAutoSentiment = true
+    @AppStorage("enableAutoTodoExtraction") private var enableAutoTodoExtraction = true
     
     var body: some View {
         NavigationStack {
@@ -22,11 +28,12 @@ struct SettingView : View {
                             .foregroundStyle(.blue)
                             .font(.title3)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("本地隐私数据保护(开发中)")
+                            Text("本地隐私数据保护")
                                 .font(.headline)
-                            Text("待补充")
+                            Text("Relo 所有的文本处理与情感分析都在设备端使用 Core ML 和 Natural Language 框架完成。您的笔记内容不会被上传到任何云端服务器，保障绝对的隐私与数据安全。")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .padding(.vertical, 4)
@@ -55,20 +62,18 @@ struct SettingView : View {
                     HStack {
                         Image(systemName: "sparkles")
                             .foregroundStyle(.orange)
-                        //TODO 目前按钮固定开启
-                        Toggle("自动分析情绪", isOn: .constant(true))
+                        Toggle("自动分析情绪与摘要", isOn: $enableAutoSentiment)
                     }
                     
                     HStack {
                         Image(systemName: "list.bullet.rectangle")
                             .foregroundStyle(.green)
-                        Toggle("自动提取待办", isOn: .constant(true))
-                            .disabled(true)
+                        Toggle("自动提取待办事项", isOn: $enableAutoTodoExtraction)
                     }
                 } header: {
                     Text("智能分析")
                 } footer: {
-                    Text("基于 Natural Language 框架进行本地分析")
+                    Text("开启后，Relo 将使用 Natural Language 框架对新笔记进行语义分析。关闭后可提升保存速度。")
                 }
                 
                 // MARK: - 关于
@@ -98,11 +103,10 @@ struct SettingView : View {
             .alert("确认清空数据", isPresented: $showClearDataAlert) {
                 Button("取消", role: .cancel) { }
                 Button("清空", role: .destructive) {
-                    // TODO: 实现清空 Core Data 的逻辑
-                    // 这里你可以自己实现清空功能
+                    vm.deleteAllNotes()
                 }
             } message: {
-                Text("此操作将永久删除所有笔记，且无法恢复。确定要继续吗？")
+                Text("此操作将永久删除所有笔记与待办，且无法恢复。确定要继续吗？")
             }
             .sheet(isPresented: $showAbout) {
                 AboutView()

@@ -175,6 +175,28 @@ class CoreDataManager {
         }
     }
     
+    // MARK: - App Data Management
+    
+    /// 清空所有的笔记和待办数据
+    func deleteAllData() -> Bool {
+        let fetchNoteRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "NoteEntity")
+        let deleteNoteRequest = NSBatchDeleteRequest(fetchRequest: fetchNoteRequest)
+        
+        let fetchTodoRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "TodoEntity")
+        let deleteTodoRequest = NSBatchDeleteRequest(fetchRequest: fetchTodoRequest)
+        
+        do {
+            try context.execute(deleteTodoRequest)
+            try context.execute(deleteNoteRequest)
+            // 确保更新上下文
+            context.reset()
+            return true
+        } catch {
+            print("清空所有数据失败: \(error)")
+            return false
+        }
+    }
+    
     // MARK: - Helpers
     
     private func normalizeTags(_ tags: [String]) -> [String] {
