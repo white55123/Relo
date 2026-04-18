@@ -70,13 +70,7 @@ struct AddTodoView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .background(ThemeGradient.horizontalPrimary)
                         .foregroundStyle(.white)
                         .cornerRadius(12)
                 }

@@ -123,13 +123,7 @@ struct AboutView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "sparkles.rectangle.stack.fill")
                             .font(.system(size: 80))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .foregroundStyle(ThemeGradient.primary)
                         
                         Text("Relo")
                             .font(.largeTitle.weight(.bold))

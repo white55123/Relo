@@ -21,6 +21,52 @@ struct AnalysisResult {
 
 class NLPAnalyzer {
     
+    private static let stopWords: Set<String> = [
+        "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个",
+        "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好",
+        "自己", "这", "那", "给", "还", "能", "可以"
+    ]
+    
+    private static let positiveWords: Set<String> = [
+        "开心", "高兴", "快乐", "兴奋", "满意", "顺利", "期待", "不错", "很好", "优秀",
+        "成功", "完成", "达成", "进步", "改善", "提升", "美好", "愉快", "轻松", "舒适",
+        "喜欢", "爱", "赞", "棒", "好", "棒极了", "太好了", "完美", "精彩", "出色"
+    ]
+    
+    private static let negativeWords: Set<String> = [
+        "累", "疲惫", "疲劳", "压力", "紧张", "焦虑", "担心", "难受", "痛苦", "糟糕",
+        "崩溃", "讨厌", "烦", "失望", "沮丧", "难过", "伤心", "困难", "麻烦",
+        "失败", "错误", "问题", "不好", "差", "糟糕透顶", "绝望", "无助", "迷茫"
+    ]
+    
+    private static let negationWords: Set<String> = ["不", "没", "没有", "非", "无", "别", "不要", "不会", "不能"]
+    
+    private static let intensityWords: [String: Double] = [
+        "非常": 2.0, "很": 1.5, "特别": 2.0, "极其": 2.5, "超级": 2.0,
+        "有点": 0.5, "稍微": 0.5, "略微": 0.5, "比较": 0.8
+    ]
+    
+    private static let timePatterns: [String] = [
+        "今天", "明天", "后天", "大后天",
+        "周一", "周二", "周三", "周四", "周五", "周六", "周日",
+        "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日",
+        "下周", "下个月", "下个星期",
+        "早上", "早晨", "清晨", "上午", "下午", "傍晚", "晚上", "中午", "凌晨",
+        "今晚", "明早", "明晚",
+        "点", "时", "分", "刻"
+    ]
+    
+    private static let actionWords: Set<String> = [
+        "提交", "完成", "开会", "讨论", "准备", "检查", "审核", "修改", "发送",
+        "回复", "处理", "安排", "计划", "制定", "执行", "实施", "落实",
+        "汇报", "报告", "总结", "分析", "研究", "学习", "复习", "练习",
+        "买", "购买", "采购", "联系", "沟通", "提醒", "取", "拿", "寄", "送",
+        "缴费", "付款", "支付", "预约", "看病", "就诊", "取药"
+    ]
+    
+    private static let colonRegex = try! NSRegularExpression(pattern: #"([01]?\d|2[0-3])[:：]([0-5]\d)"#)
+    private static let hmRegex = try! NSRegularExpression(pattern: #"(\d{1,2})\s*[点时](\d{1,2})?\s*分?"#)
+    
     // MARK: - 主入口：分析文本
     
     func analyze(text: String) -> AnalysisResult {
@@ -79,11 +125,7 @@ class NLPAnalyzer {
         var keywordScores: [String: Int] = [:]
         
         // 停用词列表（无意义的词）
-        let stopWords: Set<String> = [
-            "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个",
-            "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好",
-            "自己", "这", "那", "给", "还", "能", "可以", "会", "要", "会", "要", "会", "要"
-        ]
+        let stopWords = Self.stopWords
         
         // 遍历所有 token，提取名词、动词、形容词
         tagger.enumerateTags(
@@ -255,26 +297,14 @@ class NLPAnalyzer {
         guard !text.isEmpty else { return .neutral }
         
         // 扩展的情绪词典
-        let positiveWords: Set<String> = [
-            "开心", "高兴", "快乐", "兴奋", "满意", "顺利", "期待", "不错", "很好", "优秀",
-            "成功", "完成", "达成", "进步", "改善", "提升", "美好", "愉快", "轻松", "舒适",
-            "喜欢", "爱", "赞", "棒", "好", "棒极了", "太好了", "完美", "精彩", "出色"
-        ]
-        
-        let negativeWords: Set<String> = [
-            "累", "疲惫", "疲劳", "压力", "紧张", "焦虑", "担心", "难受", "痛苦", "糟糕",
-            "崩溃", "讨厌", "烦", "失望", "沮丧", "难过", "伤心", "痛苦", "困难", "麻烦",
-            "失败", "错误", "问题", "不好", "差", "糟糕", "糟糕透顶", "绝望", "无助", "迷茫"
-        ]
+        let positiveWords = Self.positiveWords
+        let negativeWords = Self.negativeWords
         
         // 否定词（会反转情绪）
-        let negationWords: Set<String> = ["不", "没", "没有", "非", "无", "别", "不要", "不会", "不能"]
+        let negationWords = Self.negationWords
         
         // 程度词（会增强情绪）
-        let intensityWords: [String: Double] = [
-            "非常": 2.0, "很": 1.5, "特别": 2.0, "极其": 2.5, "超级": 2.0,
-            "有点": 0.5, "稍微": 0.5, "略微": 0.5, "比较": 0.8
-        ]
+        let intensityWords = Self.intensityWords
         
         let tagger = NLTagger(tagSchemes: [.lexicalClass])
         tagger.string = text
@@ -349,24 +379,10 @@ class NLPAnalyzer {
         let sentences = splitIntoSentences(text: text)
         
         // 2. 时间词模式（扩展版）
-        let timePatterns: [String] = [
-            "今天", "明天", "后天", "大后天",
-            "周一", "周二", "周三", "周四", "周五", "周六", "周日",
-            "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日",
-            "下周", "下个月", "下个星期",
-            "早上", "早晨", "清晨", "上午", "下午", "傍晚", "晚上", "中午", "凌晨",
-            "今晚", "明早", "明晚",
-            "点", "时", "分", "刻"
-        ]
+        let timePatterns = Self.timePatterns
         
         // 3. 动作词（常见的任务动词）
-        let actionWords: Set<String> = [
-            "提交", "完成", "开会", "讨论", "准备", "检查", "审核", "修改", "发送",
-            "回复", "处理", "安排", "计划", "制定", "执行", "实施", "落实",
-            "汇报", "报告", "总结", "分析", "研究", "学习", "复习", "练习",
-            "买", "购买", "采购", "联系", "沟通", "提醒", "取", "拿", "寄", "送",
-            "缴费", "付款", "支付", "预约", "看病", "就诊", "取药"
-        ]
+        let actionWords = Self.actionWords
         
         for sentence in sentences {
             // 检查是否包含时间词和动作词
@@ -500,15 +516,16 @@ class NLPAnalyzer {
                 // 如果既没有具体时间点，也没有时间段，返回 nil 或默认时间
                 hour = 9  // 默认上午 9 点
             }
-        } else {
+        } else if var h = hour {
             // 3. 如果找到了具体时间点，检查是否需要转换（下午的时间需要 +12）
-            if text.contains("下午") && hour! < 12 {
-                hour! += 12
-            } else if (text.contains("晚上") || text.contains("今晚") || text.contains("明晚")) && hour! < 12 {
-                hour! += 12
-            } else if text.contains("中午") && hour! < 11 {
-                hour! += 12
+            if text.contains("下午") && h < 12 {
+                h += 12
+            } else if (text.contains("晚上") || text.contains("今晚") || text.contains("明晚")) && h < 12 {
+                h += 12
+            } else if text.contains("中午") && h < 11 {
+                h += 12
             }
+            hour = h
         }
         
         // 4. 解析分钟
@@ -530,9 +547,8 @@ class NLPAnalyzer {
     
     private func extractDigitalTime(from text: String) -> (hour: Int, minute: Int)? {
         // 1) HH:mm / HH：mm
-        let colonPattern = #"([01]?\d|2[0-3])[:：]([0-5]\d)"#
-        if let regex = try? NSRegularExpression(pattern: colonPattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+        let regex = Self.colonRegex
+        if let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
            let hourRange = Range(match.range(at: 1), in: text),
            let minuteRange = Range(match.range(at: 2), in: text),
            let hour = Int(text[hourRange]),
@@ -541,9 +557,8 @@ class NLPAnalyzer {
         }
         
         // 2) H点 / H时 / H点M分
-        let hmPattern = #"(\d{1,2})\s*[点时](\d{1,2})?\s*分?"#
-        if let regex = try? NSRegularExpression(pattern: hmPattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+        let hmRegex = Self.hmRegex
+        if let match = hmRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
            let hourRange = Range(match.range(at: 1), in: text),
            let hour = Int(text[hourRange]),
            hour >= 0, hour <= 23 {

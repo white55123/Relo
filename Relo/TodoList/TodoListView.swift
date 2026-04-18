@@ -133,16 +133,7 @@ struct TodoListView: View {
                     .frame(height: 44)
                     .padding(.horizontal, 30)
                     .padding(.vertical, 16)
-                    .background(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.95, green: 0.97, blue: 1.0),
-                                Color(red: 0.98, green: 0.99, blue: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .background(ThemeGradient.background)
                     
                 }
                 .background(Color(.systemBackground))
@@ -163,16 +154,7 @@ struct TodoListView: View {
                                 .multilineTextAlignment(.center)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .background(ThemeGradient.background)
                     } else {
                         if selectedPeriod == .today && !pendingTodos.isEmpty {
                             TimelineTodoView(todos: pendingTodos, vm: vm)
@@ -211,16 +193,7 @@ struct TodoListView: View {
                             }
                             .listStyle(.plain)
                             .scrollContentBackground(.hidden)
-                            .background(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.95, green: 0.97, blue: 1.0),
-                                        Color(red: 0.98, green: 0.99, blue: 1.0)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .background(ThemeGradient.background)
                         }
                     }
                 }
@@ -242,13 +215,7 @@ struct TodoListView: View {
                             .font(.system(size: 24, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: 56, height: 56)
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .background(ThemeGradient.primary)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                     }
@@ -281,9 +248,7 @@ struct TodoRowView: View {
                 Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
                     .foregroundStyle(
-                        todo.isDone ?
-                        LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                        LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        todo.isDone ? ThemeGradient.success : ThemeGradient.primary
                     )
             }
             .buttonStyle(.plain)
@@ -468,16 +433,7 @@ struct TimelineTodoView : View {
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(ThemeGradient.background)
     }
 }
 

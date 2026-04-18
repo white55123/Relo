@@ -377,9 +377,7 @@ struct TodoDetailRowView: View {
                     Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
                         .font(.title3)
                         .foregroundStyle(
-                            todo.isDone ?
-                            LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                            LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            todo.isDone ? ThemeGradient.success : ThemeGradient.primary
                         )
                 }
                 .buttonStyle(.plain)
