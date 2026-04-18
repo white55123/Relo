@@ -61,11 +61,14 @@ class NLPAnalyzer {
         "回复", "处理", "安排", "计划", "制定", "执行", "实施", "落实",
         "汇报", "报告", "总结", "分析", "研究", "学习", "复习", "练习",
         "买", "购买", "采购", "联系", "沟通", "提醒", "取", "拿", "寄", "送",
-        "缴费", "付款", "支付", "预约", "看病", "就诊", "取药"
+        "缴费", "付款", "支付", "预约", "看病", "就诊", "取药",
+        "去", "做", "写", "看", "听", "打", "交", "约", "见", "找"
     ]
     
     private static let colonRegex = try! NSRegularExpression(pattern: #"([01]?\d|2[0-3])[:：]([0-5]\d)"#)
     private static let hmRegex = try! NSRegularExpression(pattern: #"(\d{1,2})\s*[点时](\d{1,2})?\s*分?"#)
+    private static let dateRegex = try! NSRegularExpression(pattern: #"(\d{1,2})月(\d{1,2})日?"#)
+    private static let dayRegex = try! NSRegularExpression(pattern: #"下(周|个?星期)([一二三四五六日天1-7])"#)
     
     // MARK: - 主入口：分析文本
     
@@ -385,15 +388,30 @@ class NLPAnalyzer {
         let actionWords = Self.actionWords
         
         for sentence in sentences {
-            // 检查是否包含时间词和动作词
-            let hasTimeWord = timePatterns.contains { sentence.contains($0) }
+            // 改进待办提取逻辑：利用 NLTagger 进行词性分析
+            let tagger = NLTagger(tagSchemes: [.lexicalClass, .nameType])
+            tagger.string = sentence
+            
+            var hasActionVerb = false
+            
+            // 检查句子中是否有动词
+            tagger.enumerateTags(in: sentence.startIndex..<sentence.endIndex, unit: .word, scheme: .lexicalClass) { tag, _ in
+                if tag == .verb {
+                    hasActionVerb = true
+                }
+                return true
+            }
+            
+            // 检查是否包含时间词，或动作词，或含有实际动词
+            let hasTimeWord = timePatterns.contains { sentence.contains($0) } || (parseDate(from: sentence) != nil)
             let hasActionWord = actionWords.contains { sentence.contains($0) }
             
-            if hasTimeWord && hasActionWord {
+            // 条件放宽：只要有时间+任意动词，或者明确的动作词，就认为是任务
+            if (hasTimeWord && hasActionVerb) || (hasTimeWord && hasActionWord) {
                 // 提取任务文本（清理一下）
                 let todoText = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
                 
-                // 尝试解析日期（简化版）
+                // 尝试解析日期
                 let dueDate = parseDate(from: sentence)
                 
                 todos.append(TodoItem(text: todoText, dueDate: dueDate))
@@ -410,28 +428,51 @@ class NLPAnalyzer {
         let now = Date()
         var targetDate: Date?
         
+        // 0. 尝试提取确切的 X月X日
+        if let match = Self.dateRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let monthRange = Range(match.range(at: 1), in: text),
+           let dayRange = Range(match.range(at: 2), in: text),
+           let month = Int(text[monthRange]),
+           let day = Int(text[dayRange]) {
+            var comps = calendar.dateComponents([.year], from: now)
+            comps.month = month
+            comps.day = day
+            
+            if let parsedDate = calendar.date(from: comps) {
+                // 如果解析出的日期比今天还早很多（比如跨年了），默认算明年的
+                if parsedDate < calendar.date(byAdding: .month, value: -1, to: now)! {
+                    comps.year = (comps.year ?? calendar.component(.year, from: now)) + 1
+                    targetDate = calendar.date(from: comps)
+                } else {
+                    targetDate = parsedDate
+                }
+            }
+        }
+        
         // 1. 先解析星期
         let weekdayMap: [String: Int] = [
             "周一": 2, "周二": 3, "周三": 4, "周四": 5, "周五": 6, "周六": 7, "周日": 1
         ]
         
-        for (key, targetWeekday) in weekdayMap {
-            if text.contains(key) {
-                let currentWeekday = calendar.component(.weekday, from: now)
-                var daysToAdd = targetWeekday - currentWeekday
-                
-                // 处理"下周一"等（检查完整模式，而不是单独的"下"）
-                if text.contains("下\(key)") {
-                    daysToAdd += 7
+        if targetDate == nil {
+            for (key, targetWeekday) in weekdayMap {
+                if text.contains(key) {
+                    let currentWeekday = calendar.component(.weekday, from: now)
+                    var daysToAdd = targetWeekday - currentWeekday
+                    
+                    // 处理"下周一"等
+                    if let match = Self.dayRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
+                        daysToAdd += 7
+                    }
+                    
+                    // 如果目标星期已经过了，加 7 天
+                    if daysToAdd <= 0 {
+                        daysToAdd += 7
+                    }
+                    
+                    targetDate = calendar.date(byAdding: .day, value: daysToAdd, to: calendar.startOfDay(for: now))
+                    break
                 }
-                
-                // 如果目标星期已经过了，加 7 天
-                if daysToAdd <= 0 {
-                    daysToAdd += 7
-                }
-                
-                targetDate = calendar.date(byAdding: .day, value: daysToAdd, to: calendar.startOfDay(for: now))
-                break
             }
         }
         
