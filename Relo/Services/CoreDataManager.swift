@@ -14,13 +14,18 @@ class CoreDataManager {
     
     // MARK: - Notes
     
-    func loadNotes() -> (notes: [Note], mapping: [UUID: NSManagedObjectID]) {
+    /// 加载指定范围的笔记（分页）
+    /// - Parameters:
+    ///   - fetchLimit: 每次加载的数量
+    ///   - fetchOffset: 跳过的数量（偏移量）
+    func loadNotes(limit: Int = 20, offset: Int = 0) -> (notes: [Note], mapping: [UUID: NSManagedObjectID]) {
         let request = NSFetchRequest<NSManagedObject>(entityName: "NoteEntity")
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        request.fetchLimit = limit
+        request.fetchOffset = offset
         
         var loaded: [Note] = []
         var mapping: [UUID: NSManagedObjectID] = [:]
-        var shouldSaveTagMigration = false
         
         do {
             let results = try context.fetch(request)
@@ -40,14 +45,24 @@ class CoreDataManager {
                 loaded.append(note)
                 mapping[note.id] = obj.objectID
             }
-            if shouldSaveTagMigration {
-                try? context.save()
-            }
         } catch {
             print("读取历史笔记失败: \(error)")
         }
         
         return (loaded, mapping)
+    }
+    
+    /// 获取笔记总数
+    func getNotesCount() -> Int {
+        let request = NSFetchRequest<NSNumber>(entityName: "NoteEntity")
+        request.resultType = .countResultType
+        do {
+            let countResult = try context.fetch(request)
+            return countResult.first?.intValue ?? 0
+        } catch {
+            print("获取笔记总数失败: \(error)")
+            return 0
+        }
     }
     
     func saveNote(_ note: Note) -> NSManagedObjectID? {

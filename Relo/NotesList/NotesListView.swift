@@ -311,6 +311,36 @@ struct NotesListView: View {
                         Label("删除", systemImage: "trash")
                     }
                 }
+                .onAppear {
+                    // 检查是否滚动到了最后一条笔记，触发加载更多
+                    if note.id == displayedNotes.last?.id {
+                        Task {
+                            await vm.fetchNextPage()
+                        }
+                    }
+                }
+            }
+            
+            // 加载指示器
+            if vm.isFetchingMore {
+                HStack {
+                    Spacer()
+                    ProgressView("加载更多...")
+                        .font(.caption)
+                        .padding()
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+            } else if !vm.hasMoreData && !displayedNotes.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("没有更多笔记了")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .padding()
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)

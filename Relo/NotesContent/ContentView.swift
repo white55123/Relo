@@ -16,7 +16,12 @@ class NotesViewModel: ObservableObject {
     @Published var currentText: String = ""
     @Published var notes: [Note] = []
     @Published var isLoading: Bool = true
+    @Published var isFetchingMore: Bool = false
+    @Published var hasMoreData: Bool = true
     @Published var pendingTodoReviewNoteID: UUID?
+    
+    private let pageSize = 15
+    private var currentOffset = 0
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -353,13 +358,35 @@ class NotesViewModel: ObservableObject {
     
     private func loadNotes() async {
         isLoading = true
-        // 模拟加载动画
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        currentOffset = 0
+        notes.removeAll()
+        noteObjectIDs.removeAll()
+        hasMoreData = true
         
-        let data = coreDataManager.loadNotes()
+        let totalCount = coreDataManager.getNotesCount()
+        if totalCount == 0 {
+            hasMoreData = false
+            isLoading = false
+            return
+        }
         
-        // 批量做 NLP 分析？其实这里最好懒加载或直接存到 CoreData。
-        // 但既然我们改不了 CoreData 的 Schema，我们可以在后台并发分析所有的 note。
+        await fetchNextPage()
+        isLoading = false
+    }
+    
+    func fetchNextPage() async {
+        guard hasMoreData, !isFetchingMore else { return }
+        
+        isFetchingMore = true
+        
+        let data = coreDataManager.loadNotes(limit: pageSize, offset: currentOffset)
+        
+        if data.notes.isEmpty {
+            hasMoreData = false
+            isFetchingMore = false
+            return
+        }
+        
         let loadedNotes = data.notes
         
         // 我们需要对加载出来的 notes 进行分析以获得 summary, sentiment 等。
@@ -394,9 +421,17 @@ class NotesViewModel: ObservableObject {
         // Sort back to original order (by createdAt descending)
         let sortedNotes = analyzedNotes.sorted { $0.createdAt > $1.createdAt }
         
-        self.notes = sortedNotes
-        self.noteObjectIDs = data.mapping
-        self.isLoading = false
+        self.notes.append(contentsOf: sortedNotes)
+        for (key, value) in data.mapping {
+            self.noteObjectIDs[key] = value
+        }
+        
+        self.currentOffset += self.pageSize
+        if self.notes.count >= coreDataManager.getNotesCount() {
+            self.hasMoreData = false
+        }
+        
+        self.isFetchingMore = false
     }
     
     private func todoMergeKey(_ todo: TodoItem) -> String {
