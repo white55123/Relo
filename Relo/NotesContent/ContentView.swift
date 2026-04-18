@@ -521,6 +521,14 @@ struct ContentView: View {
                     }
                     
                     NavigationStack {
+                        // 数据统计页
+                        StatisticsView(vm: vm)
+                    }
+                    .tabItem {
+                        Label("统计", systemImage: "chart.pie")
+                    }
+                    
+                    NavigationStack {
                         // 设置页
                         SettingView(vm: vm)
                     }
